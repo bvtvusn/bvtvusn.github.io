@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://web01.usn.no/~btv/calculators/TextReplacer2.0.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      
+      <style>
+         html, body, textarea {
+            height: 100%;
+            margin: 0;
+            background-color: #20262e;
+
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+          }
+          
+          .header, .box {
+            background-color: #1c2128;
+          }
+
+          .header{
+            position: absolute;
+                top: 0em; 
+                height: 7em; 
+                width: 100%;
+            padding: 0.5em;
+            box-sizing: border-box;         /* For IE and modern versions of Chrome */
+                        -moz-box-sizing: border-box;    /* For Firefox                          */
+                        -webkit-box-sizing: border-box; /* For Safari                           */
+
+                        
+          }
+
+          .header, .mainarea {
+            min-width:1250px;        /* Suppose you want minimum width of 1250px */
+                
+              }
+          .groupParent {
+            display:flex; 
+             justify-content:space-between;
+          }
+          .mainarea{
+              position: absolute;
+                top: 7em; /* Header Height */
+                bottom: 0px; /* Footer Height */
+                width: 100%;
+            padding: 0 0;
+            box-sizing: border-box; 
+            }
+
+
+         .box {
+    
+               width: 33%;
+               height: 100%;
+               
+               text-align: center;
+               color: #fff;
+               box-sizing: border-box; 
+               border-style: solid;
+               border-color: #222830;
+               border-width: 2px;
+
+            }
+            
+            textarea {
+               width:100%;
+               height:100%; 
+               box-sizing: border-box;         /* For IE and modern versions of Chrome */
+               -moz-box-sizing: border-box;    /* For Firefox                          */
+               -webkit-box-sizing: border-box; /* For Safari                           */
+               
+               border-color: #2d333b;
+              border-width: 2px;
+                outline: none;
+                color: white;
+               resize: none;
+            }
+
+  
+
+            .btn {
+  border: 2px solid white;
+  background-color: #1c2128;
+  color: white;
+  padding: 0.5em 1em;
+  font-size: 0.75em;
+  cursor: pointer;
+  width: 11em;
+  /* border-radius: 0.5em; */
+}
+
+
+.btn:hover {
+  background-color: #36414e  ;
+  color: white;
+}
+
+
+  /* Popup Css: */
+
+* {
+  box-sizing: border-box;
+}
+ 
+html, body {
+  font-family: 'Raleway', sans-serif;
+  font-size: 16px;
+}
+ 
+.popup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 2;
+  visibility: hidden;
+  opacity: 0;
+  overflow: hiden;
+  transition: .64s ease-in-out;
+}
+.popup-inner {
+  position: relative;
+  bottom: -100vw;
+  right: -100vh;
+  display: flex;
+  align-items: center;
+  max-width: 800px;
+  max-height: 600px;
+  width: 100%;
+  height: 80%;
+  background-color: #fff;
+  transform: rotate(32deg);
+  transition: .64s ease-in-out;
+}
+
+
+.popuptext {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 4rem;
+}
+
+.popup:target {
+  visibility: visible;
+  opacity: 1;
+}
+.popup:target .popup-inner {
+  bottom: 0;
+  right: 0;
+  transform: rotate(0);
+}
+.closepopup {
+  position: absolute;
+  right: -1rem;
+  top: -1rem;
+  width: 3rem;
+  height: 3rem;
+  font-size: .875rem;
+  font-weight: 300;
+  border-radius: 100%;
+  background-color: #47BDFF;
+  z-index: 4;
+  color: #fff;
+  line-height: 3rem;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.linkButton {
+
+  border: 2px solid white;
+  background-color: #1c2128;
+  color: white;
+  padding: 0.5em 1em;
+  font-size: 0.75em;
+  cursor: pointer;
+  width: 11em;
+
+/* Creates button from link: */
+  text-decoration: none;
+  display: inline-block;
+}
+
+      </style>
+      <script>
+			function btn_InvertLines_click(){
+            
+            var userInput = document.getElementById("inputText").value;
+		   userInput = InvertLineOrder(userInput);
+		   document.getElementById("inputText").value = userInput;
+         }
+         function btn_Transpose_click(){
+            var userInput = document.getElementById("inputText").value;
+		   //userInput = InvertLineOrder(userInput);
+		   userInput = ExcelTranspose(userInput);
+		   
+		   document.getElementById("inputText").value = userInput;
+         }
+         function btn_getSelection_click(){
+            var userInput = document.getElementById("inputText");
+			var selectedText = userInput.value.substring(userInput.selectionStart,userInput.selectionEnd);
+			selectedText = selectedText.replace(/\n/g, '\\n' );
+			selectedText = selectedText.replace(/\t/g, '\\t');
+			selectedText = selectedText.replace(/\r/g, '\\r');
+			document.getElementById("txtFind").value = selectedText;
+         }
+         function btn_replace_click(){
+            var userInput = document.getElementById("inputText").value;
+			var str_find = document.getElementById("txtFind").value;
+			var str_replace = document.getElementById("txtReplace").value;
+			var caseInsensitive = !document.getElementById("chkCase").checked;
+			
+			//var str_insert = str.replace(/\n/g, "\n");
+			str_replace = str_replace.replace(/\\n/g, String.fromCharCode(10));
+			str_replace = str_replace.replace(/\\t/g, String.fromCharCode(9));
+			str_replace = str_replace.replace(/\\r/g, String.fromCharCode(13));
+			
+			var regexSearch = escapeRegExp(str_find);
+			//alert(regexSearch);
+			
+			var regexModifiers = "g";
+			if(caseInsensitive){
+			regexModifiers += "i";
+			}
+			re = new RegExp(regexSearch, regexModifiers);
+			//re = new RegExp("^" + str_find.split("*").join(".*") + "$",regexModifiers);
+			var result = userInput.replace(re,str_replace);
+			//result = result.replace(/\\/,"");
+			document.getElementById("inputText").value = result;
+			//alert(str_replace);
+			//alert(result);
+         }
+         
+         function btn_Backspace_click(){
+            
+			var userInput = document.getElementById("inputText");
+			
+			var rightAlignLines = document.getElementById("chkCountfromRight").checked;
+			
+			 var allRows = userInput.value.split('\n');
+			 var invertedString = "";
+			 
+			 if (rightAlignLines){ // RIght align lines
+				var nextCursorPos = 0;
+				var cursorLinePosRight = CursorPosRight(userInput);
+
+				for(var i = 0;i<allRows.length;i++){
+
+				var cursorLinePosLeft = allRows[i].length - cursorLinePosRight;
+				if ( i==0) nextCursorPos = cursorLinePosLeft;
+				invertedString += allRows[i].substring(0,cursorLinePosLeft-1) + allRows[i].substring(cursorLinePosLeft,allRows[i].length);
+				if(i!=allRows.length-1) invertedString += '\n';
+				}
+
+				userInput.value = invertedString;
+			userInput.focus();
+				userInput.selectionStart = Math.max(nextCursorPos-1,0);
+			userInput.selectionEnd = Math.max(nextCursorPos-1,0);
+			 }
+			 else // left align lines (normal)
+			 {
+				var cursorLinePosLeft = CursorPosLeft(userInput);
+				for(var i = 0;i<allRows.length;i++){
+				invertedString += allRows[i].substring(0,cursorLinePosLeft-1) + allRows[i].substring(cursorLinePosLeft,allRows[i].length);
+				if(i!=allRows.length-1) invertedString += '\n';
+				}
+
+				userInput.value = invertedString;
+			userInput.focus();
+				userInput.selectionStart = Math.max(cursorLinePosLeft-1,0);
+			userInput.selectionEnd = Math.max(cursorLinePosLeft-1,0);
+			 }
+		  }
+         
+         function btn_insertText_click(){
+            var userInput = document.getElementById("inputText");
+			
+			
+			var rightAlignLines = document.getElementById("chkCountfromRight").checked;
+			var textToInsert = document.getElementById("txtInsert").value;
+			textToInsert = textToInsert.replace(/\\n/g, String.fromCharCode(10));
+			textToInsert = textToInsert.replace(/\\t/g, String.fromCharCode(9));
+			textToInsert = textToInsert.replace(/\\r/g, String.fromCharCode(13));
+			var allRows = userInput.value.split('\n');
+			var useNumbering = textToInsert.includes("\i"); // if yes, use numbering
+			var numberOfDigits  = Math.floor(Math.log10(allRows.length-1)) + 1;
+			//alert(numberOfDigits);
+			 var invertedString = "";
+			 
+			 if (rightAlignLines){
+				var cursorLinePosRight = CursorPosRight(userInput);
+
+				for(var i = 0;i<allRows.length;i++){
+
+					var cursorLinePosLeft = allRows[i].length - cursorLinePosRight;
+
+					var number =  ('000000000' + i).substr(-numberOfDigits); 
+					//alert(number);new RegExp(pattern, "g");
+					var curTextToInsert = textToInsert.replace(/\\i/g,number);
+					invertedString += allRows[i].substring(0,cursorLinePosLeft) + curTextToInsert + allRows[i].substring(cursorLinePosLeft,allRows[i].length);
+					if(i!=allRows.length-1) invertedString += '\n';
+				}
+			 }
+			 else // left align lines (normal)
+			 {
+				var cursorLinePosLeft = CursorPosLeft(userInput);
+
+				for(var i = 0;i<allRows.length;i++){
+					var number =  ('000000000' + i).substr(-numberOfDigits); 
+					//alert(number);new RegExp(pattern, "g");
+					var curTextToInsert = textToInsert.replace(/\\i/g,number);
+					invertedString += allRows[i].substring(0,cursorLinePosLeft) + curTextToInsert + allRows[i].substring(cursorLinePosLeft,allRows[i].length);
+					if(i!=allRows.length-1) invertedString += '\n';
+				}
+			 }
+			 
+			 
+			userInput.value = invertedString;
+			userInput.focus();
+			userInput.selectionStart = Math.max(cursorLinePosLeft + textToInsert.length,0);
+			userInput.selectionEnd = Math.max(cursorLinePosLeft + textToInsert.length,0);
+		  
+         }
+      
+         function escapeRegExp(text) {
+		  var tempstring = text.replace(/[-[\]{}()*+.,^$|#\s]/g, '\\$&'); // Escape all except "?" and "\".
+			 return ( tempstring.replace(/[?]/g, '.')); // replace "?" with .
+		  }
+        function InvertLineOrder(userInput){
+			 //var userInput = document.getElementById("inputText").value;
+			 var allRows = userInput.split('\n');
+			 var invertedString = "";
+			 for(var i = allRows.length-1;i>=0;i--){
+				invertedString += allRows[i];
+				if(i!=0) invertedString += '\n';
+			 }
+			 return invertedString; //document.getElementById("inputText").value = invertedString;
+         }
+
+         function ExcelTranspose(userInput){
+			 //var userInput = document.getElementById("inputText").value;
+			 var allRows = userInput.split('\n');
+			 var allElements = [[]];
+			 var finalString = "";
+			 var orgColumns = 0;
+			 var orgRows = 0;
+			 for(var i = 0;i<allRows.length;i++){
+			 //alert(allRows[i]);
+			  var line = allRows[i].split('\t');
+			  if (allRows[i].length > 0){
+			    orgRows++;
+				allElements.push(line);
+				orgColumns = Math.max(orgColumns, line.length )
+				//alert(allElements[i+1].length)
+				
+			  }
+			 }
+			 //alert(orgRows + " " + orgColumns);
+			 for(var i = 0;i<orgColumns;i++){
+				for(var j = 1;j<orgRows+1;j++){
+					if(i<allElements[j].length) {
+					finalString += allElements[j][i];
+					}
+					if(j<=orgRows-1) finalString += '\t';
+				}
+				if(i<=orgColumns-2) finalString += '\n';
+			 }
+			 return finalString;
+		 }
+
+       function CursorPosLeft(userInput){
+			var cursorPos = userInput.selectionStart;
+			//alert(cursorPos);
+			
+			var linefeedPos = cursorPos;
+			while(userInput.value[linefeedPos-1] != '\n' && linefeedPos > 0){
+				linefeedPos--;
+			}
+			return cursorPos - linefeedPos;
+		  }
+
+		  function CursorPosRight(userInput){
+			var cursorPos = userInput.selectionStart;
+			//alert(cursorPos);
+			
+			var linefeedPos = cursorPos;
+			while(userInput.value[linefeedPos] != '\n' && linefeedPos < userInput.value.length ){
+				linefeedPos++;
+			}
+			//alert(linefeedPos - cursorPos);
+			return linefeedPos - cursorPos;
+		  }
+      </script>
+   </head>
+   <body style="margin:0%;">
+        
+        <div class="header groupParent"> 
+            <div class="box">
+                <table style="width:100%">
+                    <tbody><tr>
+                      <td>Find what:</td>
+                      <td><input type="text" id="txtFind" onclick="this.setSelectionRange(0, this.value.length)"></td> 
+                      <td><button class="btn" onclick="btn_getSelection_click()">Use selected text</button></td>
+                    </tr>
+                    <tr>
+                        <td>Replace with:</td>
+                        <td><input type="text" id="txtReplace" onclick="this.setSelectionRange(0, this.value.length)"></td> 
+                       
+                      <td><button class="btn" onclick="btn_replace_click()">Replace</button></td>
+                      
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><input type="checkbox" id="chkCase" checked="true">Match case</td>
+                        <td></td> 
+                    </tr>
+                  </tbody></table>
+            </div>
+            <div class="box">
+              
+                <button class="btn" onclick="btn_InvertLines_click()">Invert line order</button>
+                <button class="btn" onclick="btn_Transpose_click()">Transpose</button>
+                <br>
+                
+                <a class="linkButton" href="http://bvtv.wallerudtech.com/TextReplacer2.0.html#popup">Help</a>
+            </div>
+            <div class="box">
+                Multi line operations:
+                <table style="width:100%">
+                    <tbody><tr>
+                        <td><button class="btn" onclick="btn_Backspace_click()">Line backspace</button></td>
+                      
+                      <td><input type="checkbox" id="chkCountfromRight">Right align lines</td> 
+                    </tr>
+                    <tr>
+                        <td><button class="btn" onclick="btn_insertText_click()">Insert text at cursor</button></td>
+                        
+                        <td><input type="text" id="txtInsert" onclick="this.setSelectionRange(0, this.value.length)"></td> 
+                    </tr>
+                  </tbody></table>
+            </div> 
+         </div>
+         <div class="mainarea" style="padding:0.5em;">
+            <textarea name="Text1" id="inputText"></textarea>
+         </div>
+               
+         
+  <div class="popup" id="popup">
+    <div class="popup-inner">
+      
+      <div class="popuptext">
+        <h1>Tips</h1>
+        <p> "?" is single character wildcard</p>
+			<!-- <p> "\" is escape character</p> -->
+			<p> "\n"  =  linefeed character<br>
+				"\r"  =  carriage return character<br>
+				"\t"  =  tab character<br>
+				"\d"  =  digit<br>
+				"\D"  =  not digit<br>
+				"\w"  =  word character<br>
+				"\W"  =  non-word character<br>
+				"\s"  =  any white-space character<br>
+				"\S"  =  any non-white-space character<br>
+				"\b"  =  boundary (edge) of word<br>
+				"\B"  =  Matches a non-word boundary<br>
+			
+			</p>		
+			<p> add "show used special characters" (char analyser), add swap button, add enter click support, HighLight changes, transpose, upside down. <br> Add to all lines function <br> Add Find and Insert (not replace) Function</p>
+            
+      </div>
+      <a class="closepopup" href="http://bvtv.wallerudtech.com/TextReplacer2.0.html#">X</a>
+    </div>
+  </div>
+         
+   
+
+</body></html>
