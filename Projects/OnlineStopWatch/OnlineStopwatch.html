@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://web01.usn.no/~btv/calculators/onlinestopwatch.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      
+      <style>
+
+
+
+
+
+
+
+         .panel { 
+		  background-color: #ffffff;
+		  /*text-align: center;*/
+		  
+		  margin: 10px auto;
+		  max-width: 800px;
+		  border: 3px solid white;
+		  padding: 10px;
+		 
+		}
+		#Time { 
+		background-color: #ffffff;
+		margin: 10px auto;  
+		/*margin: 0 auto; */
+		margin: 100;
+		padding: 10px;
+		width: 90%;
+		text-align: center;
+		
+		}
+
+		#timeText {
+			display: inline-block; /* Div is not bigger than ist content */
+		} 
+
+		
+		#ButtonArea { 
+		background-color: #ffffff;
+		  padding: 10px;
+		  text-align: center;
+		}
+		#seconds{
+		/*font-size:128px;*/
+		/*font-size:1em;*/
+		/*font-family: Arial, Helvetica, sans-serif;*/
+		font-family: Courier, Courier, monospace;
+		font-size: 15vw;
+		}
+		#decimals{
+		/*font-size:51px;*/
+		/*font-family: Arial, Helvetica, sans-serif;*/
+		font-family: Courier, Courier, monospace;
+		font-size: 7vw;
+		}
+		
+		#btnLap{
+		background: #0090dd;
+		display:none;
+		}
+		#btnReset{
+		background: #fbad10;
+		}
+		#btnStart{
+		background: #4aae71;
+		display:inline;
+		}
+		#btnStop{
+		background: #EF6262;
+		display:none;
+		}
+		
+		.FlatButton {
+		  
+		  vertical-align: top;
+		  width: 35vw;
+		  height: 10vw;
+		  padding: 0;
+		  
+		  font-size: 4vw;
+		  color: white;
+		  
+		  border: 0;
+		  
+		}
+		
+		th, td {
+			font-size: 5vw;
+		/*font-family: Arial, Helvetica, sans-serif;*/
+		font-family: Courier, Courier, monospace;
+		font-weight:normal;
+		}
+		
+		#lapTable {
+			width:80vw; margin: auto;
+		}
+		@media only screen and (min-width: 800px)  {
+			#seconds{
+		
+			font-size: 150px;
+			}
+			#decimals{
+			font-size: 70px;
+			}
+			th, td {
+			font-size: 40px;		
+			}
+			#lapTable { width:800px;}
+			.FlatButton {
+			width: 350px;
+			height: 100px;
+			font-size: 40px;
+			
+			}
+
+		}
+		
+		
+
+      </style>
+      <script>
+		
+			var btnLap;
+			var btnReset; 
+			var btnStart; 
+			var btnStop; 
+			
+			var startTime = 0;
+			var prevElapsedTime = 0;
+			var lapTimes = new Array();
+			var newLapFlag = false;
+
+			var twoSecTimer = 0;
+			
+			window.onload = init;
+
+			
+			
+			
+			// event = keyup or keydown
+			
+				
+			function init() {
+				 btnLap = document.getElementById("btnLap");
+				 btnReset = document.getElementById("btnReset");
+				 btnStart = document.getElementById("btnStart");
+				 btnStop = document.getElementById("btnStop");
+
+				 document.getElementById("lapDiv").style.display = "none";
+
+				 var url = window.location.href;
+				 if (url.includes("#")) prevElapsedTime = Number(url.split('#')[1].split('=')[1]);
+				 
+				 showTime(prevElapsedTime);
+				 
+				 document.addEventListener('keyup', event => {
+					  if (event.code === 'Space') {
+						if(btnStart.style.display == "none")
+						{
+							btnStop_onclick();
+						}
+						else
+						{
+							btnStart_onclick();
+						}
+						
+					  }
+					})
+				 
+			}
+			function btnLap_onclick()
+			{
+				newLapFlag = true;
+				var elapsedTime = prevElapsedTime + (new Date().getTime()) - startTime;
+				lapTimes.push(elapsedTime);
+				document.getElementById("lapDiv").style.display = "block"; // show laps
+			}
+			function btnReset_onclick()
+			{
+				prevElapsedTime = 0;
+				showTime(0);
+				lapTimes = new Array();
+				document.getElementById("lapDiv").style.display = "none";
+			}
+			function btnStart_onclick()
+			{
+				startTime = new Date().getTime();
+				//newStartFlag = true;
+				btnStart.style.display = "none";
+				btnStop.style.display = "inline";
+				
+				btnReset.style.display = "none";
+				btnLap.style.display = "inline";
+				
+				running = true;
+				requestAnimationFrame(updateTimer)
+			}
+			function btnStop_onclick()
+			{
+				running = false;
+				btnStart.style.display = "inline";
+				btnStop.style.display = "none";
+				
+				btnReset.style.display = "inline";
+				btnLap.style.display = "none";
+
+				prevElapsedTime += (new Date().getTime()) - startTime;
+				showTime(prevElapsedTime); // Show the final time to make sure it is fully updated
+
+				var url = window.location.href;
+				//window.location = url.split('#')[0] + "#" + "msec=" + prevElapsedTime;
+			}
+			function updateTimer(){
+				var curTime = new Date().getTime();
+				
+				if (running == true) {
+					var totElapsed = prevElapsedTime + curTime - startTime;
+					showTime(totElapsed);
+					requestAnimationFrame(updateTimer);
+				}
+			}
+			
+			function showTime(_totElapsed){
+				var totSeconds = Math.floor(_totElapsed/1000);
+				var seconds = totSeconds % 60;
+				var minutes = Math.floor(totSeconds / 60);
+				
+				// main display				
+				document.getElementById("seconds").innerHTML = pad(minutes,2) + ":" + pad(seconds,2);
+				var hundreds = Math.floor((_totElapsed % 1000)/10);
+				var str = "." + pad(hundreds,2);
+				document.getElementById("decimals").innerHTML = str;
+				
+				if (_totElapsed > twoSecTimer)
+				{
+					twoSecTimer = _totElapsed + 2000;
+					/*var sizepx = 10 + document.getElementById("timeText").clientWidth;
+					document.getElementById("Time").setAttribute("style","width:"+sizepx+"px");
+					*/
+					
+				}
+				
+				// LapTime display
+				var table = document.getElementById("lapTable");
+				var totalTableRows = lapTimes.length + 2;
+				if (lapTimes.length > 0)
+				{
+					if (newLapFlag == true) // Regenerate Entire Table
+					{
+						newLapFlag = false;
+						GenerateLapTable();
+					}
+					table.rows[1].cells[1].innerHTML = GetTimeString(_totElapsed - lapTimes[lapTimes.length-1]);
+					table.rows[1].cells[2].innerHTML = GetTimeString(_totElapsed);
+					
+				}				
+			}
+			
+			function pad(n, width, z) {
+			  z = z || '0';
+			  n = n + '';
+			  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+			}
+			function GetTimeString(inputTime){
+				var totSeconds = Math.floor(inputTime/1000);
+				var seconds = totSeconds % 60;
+				var minutes = Math.floor(totSeconds / 60);
+				var hundreds = Math.floor((inputTime % 1000)/10);
+				return pad(minutes,2) + ":" + pad(seconds,2) + "." + pad(hundreds,2);
+			}
+			function GenerateLapTable(){
+				var table = document.getElementById("lapTable");
+				var totalTableRows = lapTimes.length + 2;
+				table.innerHTML = "";
+				var tbdy = document.createElement('tbody');
+				for (var i = 0; i < totalTableRows; i++) {
+					var tr = document.createElement('tr');
+					for (var j = 0; j < 3; j++) {
+						if (i == 0){
+							var th = document.createElement('th');
+							if (j == 0) th.appendChild(document.createTextNode('Lap'));
+							else if (j == 1) th.appendChild(document.createTextNode('Time'));
+							else th.appendChild(document.createTextNode('Total time'));
+							tr.appendChild(th);
+						}else {
+							var lapIndex = totalTableRows-i-1;
+							var timeDiff = lapTimes[totalTableRows-i-1];
+							if (lapIndex > 0) timeDiff = lapTimes[lapIndex] - lapTimes[lapIndex-1];
+							
+							var td = document.createElement('td');
+							if (j == 0) td.appendChild(document.createTextNode(lapIndex + 1));
+							else if (j == 1) td.appendChild(document.createTextNode(GetTimeString(timeDiff)));
+							else td.appendChild(document.createTextNode(GetTimeString(lapTimes[totalTableRows-i-1])));
+
+							tr.appendChild(td);
+						}
+					}
+					tbdy.appendChild(tr);
+				}
+				table.appendChild(tbdy);
+			}
+			
+      </script>
+   </head>
+   <body style="background:#f0f0f0">
+   <div class="panel">
+	   <div id="Time">
+		   
+				<span id="seconds">00:00</span>
+				<span id="decimals">.00</span>
+
+		   
+			
+	   </div>
+	   <div id="ButtonArea">
+			<button class="FlatButton" type="button" id="btnLap" onclick="btnLap_onclick();">Lap</button>
+			<button class="FlatButton" type="button" id="btnReset" onclick="btnReset_onclick();">Reset</button>
+			&nbsp;
+			<button class="FlatButton" type="button" id="btnStart" onclick="btnStart_onclick();">Start</button>
+			<button class="FlatButton" type="button" id="btnStop" onclick="btnStop_onclick();">Stop</button>
+	   </div>
+   </div>
+   <div class="panel" id="lapDiv" style="text-align: center; display: none;">
+		<table id="lapTable">
+  <tbody><tr>
+    <th>Lap</th>
+    <th>Time</th> 
+    <th>Total time</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>00:00.00</td> 
+    <td>00:00.00</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>00:00.00</td> 
+    <td>00:00.00</td>
+  </tr>
+</tbody></table>
+
+   </div>
+   <p id="testField"></p>
+   
+   
+   
+		
+   
+
+</body></html>
