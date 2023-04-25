@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<!-- saved from url=(0062)https://web01.usn.no/~btv/calculators/NumberConverter.2.0.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Number Converter</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="assets/css/main.css" /> -->
+
+    <style>
+        /* Type */
+        
+        html {
+            font-size: 13pt;
+            /* font-family: "Times New Roman", Times, serif; */
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+        }
+        
+        @media screen and (max-width: 1680px) {
+            html {
+                font-size: 11pt;
+            }
+        }
+        
+        @media screen and (max-width: 1280px) {
+            html {
+                font-size: 11pt;
+            }
+        }
+        
+        @media screen and (max-width: 980px) {
+            html {
+                font-size: 12pt;
+            }
+        }
+        
+        @media screen and (max-width: 736px) {
+            html {
+                font-size: 12pt;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            html {
+                font-size: 12pt;
+            }
+        }
+        
+        h1 a,
+        h2 a,
+        h3 a,
+        h4 a,
+        h5 a,
+        h6 a {
+            color: inherit;
+            text-decoration: none;
+        }
+        
+        h2 {
+            font-size: 1.75rem;
+        }
+        
+        h3 {
+            font-size: 1.35rem;
+        }
+        
+        h4 {
+            font-size: 1.1rem;
+        }
+        
+        h5 {
+            font-size: 0.9rem;
+        }
+        
+        h6 {
+            font-size: 0.7rem;
+        }
+        /* Header */
+        
+        body {
+            /* background-color: #1e1f23; */
+            background-color: #282828;
+            padding-top: 8rem;
+        }
+        
+        #header {
+            color: #fff;
+            cursor: default;
+            position: relative;
+            text-align: center;
+            z-index: 10001;
+        }
+        
+        #header > .logo {
+            margin: 0 0 4rem 0;
+            padding: 0;
+        }
+        
+        #header > .logo a {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            line-height: 1rem;
+        }
+        
+        #header > .logo span {
+            font-weight: 300;
+            font-size: 1rem;
+            display: block;
+            color: rgba(255, 255, 255, 0.65);
+        }
+        /* Main */
+        
+        #main > .inner {
+            margin: 0 auto;
+            width: 40rem;
+            max-width: 90%;
+            margin-bottom: 2rem;
+            background: #eeeeee;
+            /*-webkit-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+		-moz-box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75);
+		box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.75); */
+            border-radius: 4px;
+        }
+        
+        .wrapper > header {
+            text-align: center;
+            background: #27AE60;
+            padding: 2rem;
+            margin: 0;
+        }
+        
+        .wrapper.style1 .content {
+            padding: 1rem;
+        }
+        
+        @media screen and (max-width: 736px) {
+            .wrapper.style1 .content {
+                padding: 2rem;
+            }
+        }
+        
+		.footer {
+			background-color: #aaa;
+			padding: 5px;
+            color: #000;
+            cursor: default;
+            position: relative;
+            text-align: center;
+            z-index: 10001;
+        }
+
+        .box {
+            /* background-color: #999; */
+            background-color: #5499C7;
+            height: 100px;
+            border-style: solid;
+            border-width: 5px;
+            /* border-radius: 10px; */
+            border-color: #5499C7;
+            margin-bottom: 20px;
+        }
+        
+        .colorbox {
+            height: 70%;
+            /* width: 40px; */
+            background-color: #fff;
+            margin-top: 30px;
+            /* margin-bottom: 10px; */
+            /* border-radius: 7px; */
+        }
+        
+        ._box {
+            /* background-color: #999; */
+            background-color: #fff;
+            height: 100px;
+            /* border-style: solid;
+	border-width: 5px; */
+            /* border-radius: 10px; */
+            border-style: solid;
+            border-color: #eee;
+			border-width:5px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        ._box:hover {
+            /* background-color: #ddd; */
+            border-color: #fff;
+        }
+        
+        .headerField {
+            min-height: 30%;
+            /* width: 40px; */
+            background-color: #125DA1;
+            /* margin-top: 30px; */
+            /* margin-bottom: 10px; */
+            /* border-radius: 7px; */
+        }
+        
+        hr {
+            width: 60%;
+            height: 4px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #3D9970;
+            border: 0 none;
+            /* margin-top: 100px;
+margin-bottom:100px; */
+        }
+        
+        .linkHeaderText {
+            margin: 0%;
+            padding: 0%;
+        }
+        /*Important:*/
+        
+        .link-spanner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            /* edit: fixes overlap error in IE7/8, 
+     make sure you have an empty gif 
+  background-image: url('empty.gif');*/
+        }
+
+        #MainTable{
+            /* background-color: #fff; */
+            table-layout: fixed;
+            width: 100%;
+
+           /*  border-collapse: collapse;  */
+            border-collapse:separate; 
+                border-spacing:0 3px; 
+        }
+
+        table td input {
+            display: block;
+            width: 100%;
+        }
+
+        input {
+            background-color: transparent;
+            border: 0px solid;
+            padding-left: 5px;
+            /* height: 20px;
+            width: 160px; */
+            /* color: #CCC; */
+            /* text-align: center; */
+        }
+
+        tr{
+            background-color: white;
+            /* margin: 10px;
+            padding: 10px; */
+        }
+        table td :not(td) {
+        /* border-right: solid 1px gray;  */
+        border-left: solid 2px #eee;
+        }
+
+
+.btn {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    border-radius: .25rem;
+  border: 2px solid #aaa;
+  /* border-style: none; */
+  background-color: #eee;
+  color: black;
+  padding: 5px 5px;
+  margin: 2px 1px;
+  /* font-size: 0.75em; */
+  cursor: pointer;
+  width: 11em;
+  /* border-radius: 0.5em; */
+}
+
+
+    </style>
+
+<script>
+    var numBytes = 4;
+    var prevGlobalValue = 0;
+       window.onload=function() {
+         GenerateContent(0);
+         var MainTable = document.getElementById("MainTable");
+
+         
+         document.getElementById("btnAddColumn").addEventListener("click", function () { //Function that generates new table on sizechange
+            
+           if(numBytes < 7) numBytes += 1;
+           var currentvalue = parseInt(MainTable.rows[3].cells[1].childNodes[0].value);
+           MainTable.innerHTML = "";
+           GenerateContent(currentvalue);
+           
+         });
+         document.getElementById("btnRemoveColumn").addEventListener("click", function () { //Function that generates new table on sizechange
+            if(numBytes > 1) numBytes -= 1;
+            var currentvalue = parseInt(MainTable.rows[3].cells[1].childNodes[0].value);
+           MainTable.innerHTML = "";
+           GenerateContent(currentvalue);
+         });
+
+         document.getElementById("btnInvertEndian").addEventListener("click", function () { //Function that generates new table on sizechange
+           /* alert("hei"); */
+           invertEndian();
+         });
+         document.getElementById("btnBitShiftRight").addEventListener("click", function () { //Function that generates new table on sizechange
+           /* alert("hei"); */
+           Bitshift(1);
+           
+         });
+
+         document.getElementById("btnBitShiftLeft").addEventListener("click", function () { //Function that generates new table on sizechange
+           /* alert("hei"); */
+           
+           Bitshift(-1);
+         });
+
+         document.getElementById("btnInvertBits").addEventListener("click", function () { //Function that generates new table on sizechange
+           /* alert("hei"); */
+           invertBits();
+         });
+
+         document.getElementById("btnReset").addEventListener("click", function () { //Function that generates new table on sizechange
+           /* alert("hei"); */
+           UpdateValues(0);
+         });
+
+       }
+
+       
+
+         function GenerateContent(startValue){
+           /* var numBytes = parseInt(document.getElementById("ByteCount").value); */
+           //alert("generating");
+           var rows = 6;
+           var MainTable = document.getElementById("MainTable");
+           var tbody = document.createElement("tbody");
+           for (var i = 0 ; i < rows; i++) {
+             var tr = document.createElement("tr");
+             for (var j = 0; j < numBytes + 1; j++) {
+               if (j == 0){
+                 var headings = ["Binary","Bytes","Hex","Uint", "ASCII","Binary number"];
+                 var th = document.createElement("th");
+                 var txt = document.createTextNode(headings[i]);
+
+                    th.appendChild(txt);
+                 th.setAttribute("scope","row");
+                 tr.appendChild(th);
+               }
+               else{
+                  if (i==0){ // Binary
+                   var td = document.createElement("td");
+                   var userInput = document.createElement("input");
+                   userInput.setAttribute("maxlength","8");
+                   userInput.addEventListener("change", BinaryUpdate, false);
+                   td.appendChild(userInput);
+                   tr.appendChild(td);
+                 }
+                 else if (i==1){ // bytes
+                   var td = document.createElement("td");
+                   var userInput = document.createElement("input");
+                   userInput.setAttribute("type","number");
+                   userInput.setAttribute("max","255");
+                   userInput.setAttribute("min","0");
+                   userInput.addEventListener("change", ByteUpdate, false);
+                   td.appendChild(userInput);
+                   tr.appendChild(td);
+                 }
+                 else if (i == 2){ //hexadecimal
+                   var td = document.createElement("td");
+                   var userInput = document.createElement("input");
+                   userInput.setAttribute("maxlength","2");
+                   userInput.addEventListener("change", HexUpdate, false);
+                   td.appendChild(userInput);
+                   tr.appendChild(td);
+                 }
+                 else if (i == 3) { //third row needs one cell (Uint)
+                   if (j == 1) {
+                     var td = document.createElement("td");
+                     //var txt = document.createTextNode("I/O " + i);
+                     td.setAttribute("colspan",numBytes);
+                     var userInput = document.createElement("input");
+                     userInput.setAttribute("type","number");
+                     userInput.addEventListener("change", UintUpdate, false);
+                     //userInput.setAttribute()
+                     td.appendChild(userInput);
+                        //td.appendChild(txt);
+                     tr.appendChild(td);
+                   }
+                 }
+                 else if (i == 4){ //ASCII
+                   var td = document.createElement("td");
+                   var userInput = document.createElement("input");
+                   userInput.setAttribute("maxlength","2");
+                   userInput.addEventListener("change", AsciiUpdate, false);
+                   td.appendChild(userInput);
+                   tr.appendChild(td);
+                 }
+                 else if (i == 5) { //5th row needs one cell (binstring)
+                   if (j == 1) {
+                     var td = document.createElement("td");
+                     //var txt = document.createTextNode("I/O " + i);
+                     td.setAttribute("colspan",numBytes);
+
+                     var childTable = document.createElement("table");
+                     var childTbody = document.createElement("tbody");
+                     var childTr = document.createElement("tr");
+                     for (var i = 0 ; i < numBytes*8; i++) {
+                       var childData = document.createElement("td");
+                       childData.style.padding = "0px";
+                       childData.innerHTML = "0";
+                       childTr.appendChild(childData);
+                     }
+                     childTbody.appendChild(childTr);
+                     childTable.appendChild(childTbody);
+                     td.appendChild(childTable);
+                     tr.appendChild(td);
+                   }
+                 }
+               }
+             }
+             tbody.appendChild(tr);
+           }
+           MainTable.appendChild(tbody);
+           UpdateValues(startValue);
+         }
+         function BinaryUpdate() {
+           var table = document.getElementById("MainTable");
+           var multiplier = 1;
+           var _numBytes = table.rows[0].cells.length-1;
+           var result = 0;
+
+           for (var j = _numBytes ; j >= 1; j--) {
+             //alert(parseInt(table.rows[0].cells[j].childNodes[0].value,2));
+             result = result + parseInt(table.rows[0].cells[j].childNodes[0].value,2) * multiplier;
+             multiplier = multiplier * 256;
+           }
+           UpdateValues(result,4);
+         }
+         function ByteUpdate() {
+           var table = document.getElementById("MainTable");
+           var multiplier = 1;
+           var _numBytes = table.rows[1].cells.length-1;
+           var result = 0;
+
+           for (var j = _numBytes ; j >= 1; j--) {
+             //alert(parseInt(table.rows[0].cells[j].childNodes[0].value,2));
+             var cellvalue = table.rows[1].cells[j].childNodes[0].value;
+             if (cellvalue > 255) cellvalue = 255;
+             if (cellvalue < 0) cellvalue = 0;
+             result = result + cellvalue * multiplier;
+             multiplier = multiplier * 256;
+           }
+           UpdateValues(result,4);
+         }
+         function HexUpdate() {
+           var table = document.getElementById("MainTable");
+           var multiplier = 1;
+           var _numBytes = table.rows[2].cells.length-1;
+           var result = 0;
+
+           for (var j = _numBytes ; j >= 1; j--) {
+             var hexStr = table.rows[2].cells[j].childNodes[0].value;
+             if (hexStr == "") hexStr = 0;
+             result = result + parseInt(hexStr,16) * multiplier;
+             multiplier = multiplier * 256;
+           }
+           UpdateValues(result,4);
+         }
+         function UintUpdate() {
+             var table = document.getElementById("MainTable");
+             var value = table.rows[3].cells[1].childNodes[0].value;
+           UpdateValues(parseInt(value),4);
+         }
+         function AsciiUpdate() {
+           var table = document.getElementById("MainTable");
+           var multiplier = 1;
+           var _numBytes = table.rows[4].cells.length-1;
+           var result = 0;
+
+           for (var j = _numBytes ; j >= 1; j--) {
+             //alert(parseInt(table.rows[0].cells[j].childNodes[0].value,2));
+             var cellcontent = table.rows[4].cells[j].childNodes[0].value;
+             var letter = cellcontent.charCodeAt(0);
+             if (cellcontent == "") letter = "0";
+             result = result + parseInt(letter) * multiplier;
+             multiplier = multiplier * 256;
+           }
+           
+           UpdateValues(result,4);
+         }
+
+         function invertBits(){
+    var currentvalue = parseInt(MainTable.rows[3].cells[1].childNodes[0].value);
+    var bitstring = currentvalue.toString(2);
+    bitstring = bitstring.padStart(numBytes*8,'0');
+
+    var newvalue = parseInt(bitstring.split("").reverse().join(""), 2);
+    UpdateValues(newvalue);
+
+}
+         function invertEndian(){
+            var table = document.getElementById("MainTable");
+            var Uint = parseInt(table.rows[3].cells[1].childNodes[0].value);
+            var hex = Uint.toString(16);
+            if (hex == "NaN") hex = "0";  
+            hex = hex.padStart(numBytes*2, '0');
+            /* if (hex.length % 2 == 1) hex = "0" + hex; */
+            
+            var swappedHex = "";
+            for(var i = hex.length - 2; i>= 0;i-=2){
+                swappedHex += hex.substring(i,i+2);
+            }
+            Uint = parseInt(swappedHex, 16);
+            UpdateValues(Uint);
+         }
+         function Bitshift(nBits){
+             
+            var bitstring = prevGlobalValue.toString(2);
+            bitstring = bitstring.padStart(numBytes*8,'0');
+            if (nBits >= 0) bitstring = bitstring.substring(nBits,numBytes*8-nBits);
+            else bitstring = bitstring + "0";
+           
+
+            var newvalue = parseInt(bitstring, 2);
+            UpdateValues(newvalue);
+         }
+         function UpdateValues(Uint){
+           
+           var bytes = numBytes;/* parseInt(document.getElementById("ByteCount").value); */
+           var table = document.getElementById("MainTable");
+           if (Uint > 9007199254740991 || Number.isNaN(Uint) == true) {
+             alert("Input value too high");
+             Uint = prevGlobalValue;
+             /* return; */
+           }
+           else{
+            prevGlobalValue = Uint;
+           }
+           
+           Uint = Math.min(Uint,Math.pow(256,bytes)-1); //Constrain value. Maximum value for numerical input: 9007199254740991
+           Uint = Math.max(Uint,0);
+           var hex = Uint.toString(16);
+           /* if (hex == "NaN") hex = prevGlobalValue; */
+           //alert(hex);
+           while (hex.length < (bytes*2 || 2)) {hex = "0" + hex;}
+
+           var decBytes = new Array(bytes)
+           for (var i = 0 ; i < bytes; i++) {
+             decBytes[i] = parseInt(hex.substring((i*2),(i*2)+2),16);
+           }
+           for (var i = 0, row; row = table.rows[i]; i++) {
+           //iterate through rows
+           //rows would be accessed using the "row" variable assigned in the for loop
+             for (var j = 1, col; col = row.cells[j]; j++) {
+               //iterate through columns
+               //columns would be accessed using the "col" variable assigned in the for loop
+               if (i==0 && j > 0){ //binary
+                 var byteStr = decBytes[j-1].toString(2);
+                 while (byteStr.length < (8 || 2)) {byteStr = "0" + byteStr;}
+                 col.childNodes[0].value = byteStr;
+               }
+               if (i==1 && j > 0){ // decimal bytes
+                 col.childNodes[0].value = decBytes[j-1];
+                 //col.childNodes[0].value = parseInt(Uint.toString(16),16);
+               }
+               if (i==2 && j > 0){ // hexadecimal
+                 col.childNodes[0].value = hex.substring((j*2)-2,j*2);
+               }
+                 if (i==3 && j == 1){ // Unsigned integer
+                 col.childNodes[0].value = Uint;
+               }
+               if (i==4 && j > 0){ // ASCII
+                 var s = 'A';
+                 //s.charCodeAt(0);
+                 col.childNodes[0].value = String.fromCharCode(decBytes[j-1]);
+                 //s.charCodeAt(0);
+               }
+               if (i==5 && j == 1){ //binary
+                 var byteStr = Uint.toString(2);
+                 while (byteStr.length < (8*bytes || 2)) {byteStr = "0" + byteStr;}
+                 col.childNodes[0].value = byteStr;
+                 var childTable = col.childNodes[0];
+                 for (var j = 0, _col; _col = childTable.rows[0].cells[j]; j++) {
+                   _col.innerHTML = byteStr[j];
+                 }
+               }
+             }
+           }
+         }
+
+ </script>
+
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="logo"><a href="https://web01.usn.no/~btv/index.html"> Calculators and tools <span>made by Bjørn Vegard Tveraaen </span></a></div>
+    </header>
+
+    <!-- Main -->
+    <section id="main">
+        <div class="inner">
+
+            <!-- One -->
+            <section id="one" class="wrapper style1">
+
+                <header class="special">
+                    <h2>Number Converter</h2>
+                    <p>Conversion between bits, bytes, hex, int and ASCII characters</p>
+                </header>
+                <div class="content">
+
+
+                    <table id="MainTable">
+                    <tbody><tr><th scope="row">Binary</th><td><input maxlength="8"></td><td><input maxlength="8"></td><td><input maxlength="8"></td><td><input maxlength="8"></td></tr><tr><th scope="row">Bytes</th><td><input type="number" max="255" min="0"></td><td><input type="number" max="255" min="0"></td><td><input type="number" max="255" min="0"></td><td><input type="number" max="255" min="0"></td></tr><tr><th scope="row">Hex</th><td><input maxlength="2"></td><td><input maxlength="2"></td><td><input maxlength="2"></td><td><input maxlength="2"></td></tr><tr><th scope="row">Uint</th><td colspan="4"><input type="number"></td></tr><tr><th scope="row">ASCII</th><td><input maxlength="2"></td><td><input maxlength="2"></td><td><input maxlength="2"></td><td><input maxlength="2"></td></tr><tr><th scope="row">Binary number</th><td colspan="4"><table><tbody><tr><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td><td style="padding: 0px;">0</td></tr></tbody></table></td></tr></tbody></table>
+                    <div style="text-align:center;">
+                        <br>
+                    <!-- <label>
+                        Number of bytes:
+                     </label> -->
+                     <!-- <input type="number" id="ByteCount" value="2" min="1" max="7"> -->
+
+                     <input class="btn" type="button" value="Add column (+)" id="btnAddColumn">
+                     <input class="btn" type="button" value="Remove column (-)" id="btnRemoveColumn">
+                     <br>
+                     <input class="btn" type="button" value="Reverse byte order" id="btnInvertEndian">
+                     <input class="btn" type="button" value="Reverse bit order" id="btnInvertBits">
+                     <br>
+                     <input class="btn" type="button" value="Shift bits left (&lt;&lt;)" id="btnBitShiftLeft">
+                     <input class="btn" type="button" value="Shift bits right (&gt;&gt;)" id="btnBitShiftRight">
+                     
+                     <br>
+                     <input class="btn" type="button" value="Reset" id="btnReset">
+
+                    <!-- List of all the links on the page -->
+                    </div>
+                    
+                    
+				</div>
+				<div class="footer">
+						Updated:
+                    02.01.2020
+				</div>
+            </section>
+
+
+
+</div></section></body></html>
