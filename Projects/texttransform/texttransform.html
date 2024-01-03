@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Transformer</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+  <h1>Text Transformer</h1>
+  <label for="inputText">Input Text:</label>
+  <textarea id="inputText" rows="4" cols="50"></textarea>
+
+  <button onclick="transformText()">Transform</button>
+
+  <label for="outputText">Output Text:</label>
+  <textarea id="outputText" rows="4" cols="50" readonly></textarea>
+
+  <div id="addTransformerButtonsContainer">
+    <!-- Add Transformer buttons will be added here -->
+  </div>
+
+  <div id="transformersContainer">
+    <!-- Transformer buttons and settings will be dynamically added here -->
+  </div>
+<button onclick="exportSettings()">Export Settings</button>
+<button onclick="importSettings()">Import Settings</button>
+  <script src="main.js"></script>
+</body>
+</html>
