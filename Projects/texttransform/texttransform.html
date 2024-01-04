@@ -5,26 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Text Transformer</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
 </head>
 <body>
-  <h1>Text Transformer</h1>
-  <label for="inputText">Input Text:</label>
-  <textarea id="inputText" rows="4" cols="50"></textarea>
+  <div class="container">
+    <!-- Left Part (Controls) -->
+    <div class="left-part">
+      <h1 class="app-title">Text Transformer</h1>
 
-  <button onclick="transformText()">Transform</button>
+      <div id="addTransformerButtonsContainer" class="add-buttons-container">
+        <!-- Add Transformer buttons will be added here -->
+      </div>
 
-  <label for="outputText">Output Text:</label>
-  <textarea id="outputText" rows="4" cols="50" readonly></textarea>
+      <button class="action-button highlight-button" onclick="exportSettings()">Export Settings</button>
+      <button class="action-button highlight-button" onclick="importSettings()">Import Settings</button>
+    </div>
 
-  <div id="addTransformerButtonsContainer">
-    <!-- Add Transformer buttons will be added here -->
+    <!-- Right Part (Transformation Process) -->
+    <div class="right-part">
+      <label class="input-label" for="inputText">Input Text:</label>
+      <textarea id="inputText" class="text-area" rows="4" cols="30"></textarea>
+      <button class="action-button transform-button" onclick="transformText()">Transform</button>
+
+      <div id="transformersContainer">
+        <!-- Transformer buttons and settings will be dynamically added here -->
+      </div>
+
+      <label class="output-label" for="outputText">Output Text:</label>
+      <textarea id="outputText" class="text-area" rows="4" cols="30" readonly></textarea>
+    </div>
   </div>
 
-  <div id="transformersContainer">
-    <!-- Transformer buttons and settings will be dynamically added here -->
-  </div>
-<button onclick="exportSettings()">Export Settings</button>
-<button onclick="importSettings()">Import Settings</button>
   <script src="main.js"></script>
 </body>
 </html>
