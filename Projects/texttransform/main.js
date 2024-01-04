@@ -21,24 +21,11 @@ class Transformer {
     // To be implemented by the concrete transformer classes
   }
 
-  renderSettingsUI(container) {
-    this.settings.forEach(setting => {
-      const settingElement = document.createElement('input');
-      settingElement.type = 'text';
-      settingElement.value = setting.value;
-      settingElement.id = setting.name.replace(/\s+/g, '_') + 'Setting'; // Unique ID
-
-      const label = document.createElement('label');
-      label.textContent = `${setting.name}: `;
-      label.appendChild(settingElement);
-
-      container.appendChild(label);
-    });
-  }
+  
 
   applySettings() {
     this.settings.forEach(setting => {
-      const settingElement = document.getElementById(`ReplaceTransformer_${this.id}_${setting.name.replace(/\s+/g, '_')}Setting`);
+      const settingElement = document.getElementById(`${this.constructor.name}_${this.id}_${setting.name.replace(/\s+/g, '_')}Setting`);
       if (settingElement) {
         setting.value = settingElement.value;
       }
@@ -84,6 +71,51 @@ class ReverseTransformer extends Transformer {
     return input.split('').reverse().join('');
   }
 }
+class EscapeUrlTransformer extends Transformer {
+  constructor() {
+    super();
+    
+  }
+
+  transform(input) {
+    return escape(input);
+  }
+}
+
+// Concrete transformer class: UnescapeUrlTransformer
+class UnescapeUrlTransformer extends Transformer {
+  constructor() {
+    super();
+    
+  }
+
+  transform(input) {
+    return unescape(input);
+  }
+}
+class CaseConverterTransformer extends Transformer {
+  constructor() {
+    super();
+    this.settings.push(new Setting('Case Type', 'select', 'lowercase', ['lowercase', 'uppercase', 'titlecase']));
+  }
+
+  transform(input) {
+    const caseType = this.settings.find(s => s.name === 'Case Type').value;
+
+    switch (caseType) {
+      case 'lowercase':
+        return input.toLowerCase();
+      case 'uppercase':
+        return input.toUpperCase();
+      case 'titlecase':
+        return input.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase());
+      default:
+        return input;
+    }
+  }
+}
+
+
 
 // Main application logic
 const addTransformerButtonsContainer = document.getElementById('addTransformerButtonsContainer');
@@ -111,7 +143,16 @@ function addTransformer(transformerType) {
       break;
     case 'Reverse':
       transformer = new ReverseTransformer();
-      break; // Add the case for the new transformer type
+      break;
+    case 'Escape Url':
+      transformer = new EscapeUrlTransformer();
+      break;
+    case 'Unescape Url':
+      transformer = new UnescapeUrlTransformer();
+      break;
+    case 'Case Converter':
+      transformer = new CaseConverterTransformer();
+      break;
 
     // Add more transformer types as needed
     default:
@@ -124,6 +165,7 @@ function addTransformer(transformerType) {
   transformers.push(transformer);
   updateTransformerButtonsAndSettings();
 }
+
 
 // Function to remove a transformer from the chain
 function removeTransformer(index) {
@@ -148,7 +190,7 @@ function updateTransformerButtonsAndSettings() {
 
     const removeButton = document.createElement('button');
     removeButton.textContent = 'Remove';
-    removeButton.onclick = () => removeTransformer(transformer);
+    removeButton.onclick = () => removeTransformer(transformers.indexOf(transformer));
 
     transformerHeader.appendChild(removeButton);
     transformerDiv.appendChild(transformerHeader);
@@ -158,23 +200,36 @@ function updateTransformerButtonsAndSettings() {
     settingsDiv.className = 'settings';
 
     transformer.settings.forEach(setting => {
-      const settingLabel = document.createElement('label');
-      settingLabel.textContent = setting.name;
+  const settingLabel = document.createElement('label');
+  settingLabel.textContent = setting.name;
 
-      const settingInput = document.createElement('input');
-      settingInput.type = 'text';
-      settingInput.value = setting.value;
-      settingInput.id = `${transformer.constructor.name}_${transformer.id}_${setting.name.replace(/\s+/g, '_')}Setting`;
+  let settingInput;
 
-      settingLabel.appendChild(settingInput);
-      settingsDiv.appendChild(settingLabel);
+  if (setting.dataType === 'select') {
+    settingInput = document.createElement('select');
+    setting.options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option;
+      optionElement.text = option;
+      settingInput.add(optionElement);
     });
+    settingInput.value = setting.value;
+  } else {
+    settingInput = document.createElement('input');
+    settingInput.type = 'text';
+    settingInput.value = setting.value;
+  }
+
+  settingInput.id = `${transformer.constructor.name}_${transformer.id}_${setting.name.replace(/\s+/g, '_')}Setting`;
+  settingLabel.appendChild(settingInput);
+  settingsDiv.appendChild(settingLabel);
+});
 
     transformerDiv.appendChild(settingsDiv);
-
     transformersContainer.appendChild(transformerDiv);
   });
 }
+
 
 // ... (rest of the code) ...
 
@@ -278,4 +333,7 @@ function importSettings() {
 addTransformerButton('Replace');
 addTransformerButton('Duplicate');
 addTransformerButton('Reverse');
+addTransformerButton('Escape Url');
+addTransformerButton('Unescape Url');
+addTransformerButton('Case Converter');
 // Add more transformer buttons as needed
