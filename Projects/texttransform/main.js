@@ -1,3 +1,11 @@
+// Define the SelectionRange class
+class SelectionRange {
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
+  }
+}
+
 // Define the Setting class
 class Setting {
   constructor(name, dataType, value, options = []) {
@@ -12,20 +20,24 @@ class Setting {
 
 // Base transformer class
 class Transformer {
+	static displayName = 'Transformer'; // Default display name
   constructor() {
     this.settings = [];
 	this.id = Date.now(); 
   }
 
-  transform(input) {
+  transform(fullText, selectedRanges) {
     // To be implemented by the concrete transformer classes
+    // Default behavior: Apply transformation to the entire text
+    return fullText;
   }
-
   
 
   applySettings() {
     this.settings.forEach(setting => {
-      const settingElement = document.getElementById(`${this.constructor.name}_${this.id}_${setting.name.replace(/\s+/g, '_')}Setting`);
+      const settingElement = document.getElementById(
+        `${this.constructor.name}_${this.id}_${setting.name.replace(/\s+/g, '_')}Setting`
+      );
       if (settingElement) {
         setting.value = settingElement.value;
       }
@@ -35,87 +47,503 @@ class Transformer {
 
 // Concrete transformer class: ReplaceTransformer
 class ReplaceTransformer extends Transformer {
+  static displayName = 'Replace';
   constructor() {
     super();
     this.settings.push(new Setting('Find Text', 'string', 'cat'));
     this.settings.push(new Setting('Replace Text', 'string', 'dog'));
   }
 
-  transform(input) {
+  transform(input, selectedRanges) {
     const findText = this.settings.find(s => s.name === 'Find Text').value;
     const replaceText = this.settings.find(s => s.name === 'Replace Text').value;
-    return input.replace(new RegExp(findText, 'g'), replaceText);
+
+    selectedRanges.forEach(range => {
+      const start = range.start;
+      const end = range.end;
+      const selectedText = input.substring(start, end);
+      const replacedText = selectedText.replace(new RegExp(findText, 'g'), replaceText);
+      input = input.substring(0, start) + replacedText + input.substring(end);
+    });
+
+    return { text: input, selectedRanges };
   }
 }
 
+
+
 // Concrete transformer class: DuplicateTransformer
 class DuplicateTransformer extends Transformer {
+  static displayName = 'Duplicate';
   constructor() {
     super();
     this.settings.push(new Setting('Duplicate Count', 'integer', 2));
   }
 
-  transform(input) {
+  transform(input, selectedRanges) {
     const duplicateCount = this.settings.find(s => s.name === 'Duplicate Count').value;
-    return input.split('').map(char => char.repeat(duplicateCount)).join('');
+
+    selectedRanges.forEach(range => {
+      const start = range.start;
+      const end = range.end;
+      const selectedText = input.substring(start, end);
+      const duplicatedText = selectedText.split('').map(char => char.repeat(duplicateCount)).join('');
+      input = input.substring(0, start) + duplicatedText + input.substring(end);
+    });
+
+    // Select everything after transformation
+    const newEnd = input.length;
+    return { text: input, selectedRanges: [{ start: 0, end: newEnd }] };
   }
 }
 
+
+
+// Concrete transformer class: ReverseTransformer
 class ReverseTransformer extends Transformer {
+  static displayName = 'Reverse';
   constructor() {
     super();
     // Reverse transformer doesn't have specific settings
   }
 
-  transform(input) {
-    return input.split('').reverse().join('');
+  transform(input, selectedRanges) {
+    let result = input;
+    let newSelectedRanges = [];
+
+    selectedRanges.forEach(range => {
+      const start = range.start;
+      const end = range.end;
+      const selectedText = result.substring(start, end);
+      const reversedText = selectedText.split('').reverse().join('');
+      result = result.substring(0, start) + reversedText + result.substring(end);
+
+      // Update the selected ranges based on the transformation
+      const newStart = start;
+      const newEnd = newStart + selectedText.length;
+      newSelectedRanges.push({ start: newStart, end: newEnd });
+    });
+
+    return { text: result, selectedRanges: newSelectedRanges };
   }
 }
+
+
+// Concrete transformer class: EscapeUrlTransformer
 class EscapeUrlTransformer extends Transformer {
+  static displayName = 'Escape URL';
   constructor() {
     super();
-    
   }
 
-  transform(input) {
-    return escape(input);
+  transform(input, selectedRanges) {
+    let result = input;
+    let newSelectedRanges = [];
+
+    selectedRanges.forEach(range => {
+      const start = range.start;
+      const end = range.end;
+      const selectedText = result.substring(start, end);
+      const escapedText = escape(selectedText);
+      result = result.substring(0, start) + escapedText + result.substring(end);
+
+      // Update the selected ranges based on the transformation
+      const newStart = start;
+      const newEnd = newStart + escapedText.length;
+      newSelectedRanges.push({ start: newStart, end: newEnd });
+    });
+
+    return { text: result, selectedRanges: newSelectedRanges };
   }
 }
 
-// Concrete transformer class: UnescapeUrlTransformer
+
+
 class UnescapeUrlTransformer extends Transformer {
+  static displayName = 'Unescape URL';
   constructor() {
     super();
-    
   }
 
-  transform(input) {
-    return unescape(input);
+  transform(input, selectedRanges) {
+    let result = input;
+    let newSelectedRanges = [];
+
+    selectedRanges.forEach(range => {
+      const start = range.start;
+      const end = range.end;
+      const selectedText = result.substring(start, end);
+      const unescapedText = unescape(selectedText);
+      result = result.substring(0, start) + unescapedText + result.substring(end);
+
+      // Update the selected ranges based on the transformation
+      const newStart = start;
+      const newEnd = newStart + unescapedText.length;
+      newSelectedRanges.push({ start: newStart, end: newEnd });
+    });
+
+    return { text: result, selectedRanges: newSelectedRanges };
   }
 }
+
+
 class CaseConverterTransformer extends Transformer {
+  static displayName = 'Case Converter';
+
   constructor() {
     super();
     this.settings.push(new Setting('Case Type', 'select', 'lowercase', ['lowercase', 'uppercase', 'titlecase']));
+	
+	
+	//this.runTest();
   }
 
-  transform(input) {
+  runTest() {
+    // Sample text for testing
+    const sampleText = 'THIS is a Sample Text';
+
+    // Convert the sample text using the current settings
+    const transformedText = this.transform(sampleText, [{ start: 0, end: sampleText.length }]);
+
+//console.log(`Test Result for ${this.constructor.displayName}:`, transformedText.text);
+    // Log the result to the console
+    console.log(`Test Result for ${this.constructor.displayName}:`, transformedText.text);
+  }
+  
+  transform(input, selectedRanges) {
+	  //console.log('JSON in case transform::', JSON.stringify(selectedRanges));
     const caseType = this.settings.find(s => s.name === 'Case Type').value;
 
-    switch (caseType) {
-      case 'lowercase':
-        return input.toLowerCase();
-      case 'uppercase':
-        return input.toUpperCase();
-      case 'titlecase':
-        return input.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase());
-      default:
-        return input;
+    if (!Array.isArray(selectedRanges) || selectedRanges.length === 0) {
+      // No selected text, return the original input
+      return { text: input, selectedRanges: [] };
     }
+
+    let transformedText = '';
+
+    // Build the transformed text based on selected ranges
+    let lastIndex = 0;
+    selectedRanges.forEach(range => {
+      const { start, end } = range;
+	  
+      const unselectedText = input.substring(lastIndex, start);
+      const selectedText = input.substring(start, end);
+
+      // Apply case conversion to the selected range
+      let convertedText;
+      switch (caseType) {
+        case 'lowercase':
+          convertedText = selectedText.toLowerCase();
+          break;
+        case 'uppercase':
+          convertedText = selectedText.toUpperCase();
+          break;
+        case 'titlecase':
+          convertedText = selectedText.replace(/\w\S*/g, word =>
+            word.charAt(0).toUpperCase() + word.substr(1).toLowerCase()
+          );
+          break;
+        default:
+          // Do nothing for unknown case types
+          convertedText = selectedText;
+      }
+
+      transformedText += unselectedText + convertedText;
+      lastIndex = end;
+	
+    });
+
+    // Append any remaining unselected text
+    transformedText += input.substring(lastIndex);
+    return { text: transformedText, selectedRanges };
   }
 }
 
 
+
+
+
+
+
+// Concrete transformer class: SelectTextTransformer
+class SelectTextTransformer extends Transformer {
+  static displayName = 'Select Text';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Text to Select', 'string', ''));
+  }
+
+  transform(input, selectedRanges) {
+    const textToSelect = this.settings.find(s => s.name === 'Text to Select').value;
+    if (textToSelect.length < 1) {
+      return { text: input, selectedRanges: [] };
+    }
+    const regex = new RegExp(textToSelect, 'g');
+    let match;
+    const newSelectedRanges = [];
+
+    while ((match = regex.exec(input)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+      newSelectedRanges.push({ start, end });
+    }
+
+    return {
+      text: input,
+      selectedRanges: newSelectedRanges,
+    };
+  }
+}
+
+class SelectBetweenDelimitersTransformer extends Transformer {
+  static displayName = 'Select Between Delimiters';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Delimiter', 'string', ','));
+  }
+
+  transform(input) {
+    const delimiter = this.settings.find(s => s.name === 'Delimiter').value;
+    const delimiterIndexes = [];
+    let match;
+
+    // Find all occurrences of the delimiter
+    const regex = new RegExp(delimiter, 'g');
+    while ((match = regex.exec(input)) !== null) {
+      delimiterIndexes.push(match.index);
+    }
+
+    const transformedRanges = [];
+
+    for (let i = 0; i < delimiterIndexes.length - 1; i += 2) {
+      // Select text between delimiters
+      const start = delimiterIndexes[i] + delimiter.length;
+      const end = delimiterIndexes[i + 1];
+      transformedRanges.push({ start, end, selected: true });
+    }
+
+    // Unselected text after the last delimiter
+    if (delimiterIndexes.length % 2 === 1) {
+      const lastUnselectedStart = delimiterIndexes[delimiterIndexes.length - 1] + delimiter.length;
+      const lastUnselectedEnd = input.length;
+      transformedRanges.push({ start: lastUnselectedStart, end: lastUnselectedEnd, selected: false });
+    }
+
+    return { text: input, selectedRanges: transformedRanges };
+  }
+}
+
+
+// Concrete transformer class: InvertSelectionTransformer
+class InvertSelectionTransformer extends Transformer {
+  static displayName = 'Invert Selection';
+
+  constructor() {
+    super();
+    // Invert Selection transformer doesn't have specific settings
+  }
+
+  transform(input, selectedRanges) {
+    if (!Array.isArray(selectedRanges) || selectedRanges.length === 0) {
+      // No selected text, select everything
+      return { text: input, selectedRanges: [{ start: 0, end: input.length }] };
+    }
+
+    // Sort selected ranges to simplify inversion
+    selectedRanges.sort((a, b) => a.start - b.start);
+
+    let invertedRanges = [];
+
+    // Select text before the first selected range
+    if (selectedRanges[0].start > 0) {
+      invertedRanges.push({ start: 0, end: selectedRanges[0].start });
+    }
+
+    // Invert the selection between consecutive ranges
+    for (let i = 0; i < selectedRanges.length - 1; i++) {
+      invertedRanges.push({
+        start: selectedRanges[i].end,
+        end: selectedRanges[i + 1].start,
+      });
+    }
+
+    // Select text after the last selected range
+    if (selectedRanges[selectedRanges.length - 1].end < input.length) {
+      invertedRanges.push({
+        start: selectedRanges[selectedRanges.length - 1].end,
+        end: input.length,
+      });
+    }
+
+    return { text: input, selectedRanges: invertedRanges };
+  }
+}
+
+
+// Concrete transformer class: DeleteTextTransformer
+class DeleteTextTransformer extends Transformer {
+  static displayName = 'Delete Text';
+
+  constructor() {
+    super();
+    // Delete Text transformer doesn't have specific settings
+  }
+
+  transform(input, selectedRanges) {
+    if (!Array.isArray(selectedRanges) || selectedRanges.length === 0) {
+      // No selected text, nothing to delete
+      return { text: input, selectedRanges: [] };
+    }
+
+    // Sort selected ranges to simplify deletion
+    selectedRanges.sort((a, b) => a.start - b.start);
+
+    let result = '';
+
+    // Delete text before the first selected range
+    result += input.substring(0, selectedRanges[0].start);
+
+    // Delete text between consecutive selected ranges
+    for (let i = 0; i < selectedRanges.length - 1; i++) {
+      result += input.substring(selectedRanges[i].end, selectedRanges[i + 1].start);
+    }
+
+    // Delete text after the last selected range
+    result += input.substring(selectedRanges[selectedRanges.length - 1].end);
+
+    return { text: result, selectedRanges: [] };
+  }
+}
+
+
+class DeselectIfTransformer extends Transformer {
+  static displayName = 'Deselect If';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Mode', 'select', 'if contains', ['if contains', 'if not contains']));
+    this.settings.push(new Setting('String to Check', 'string', ''));
+  }
+
+  transform(input, selectedRanges) {
+    const mode = this.settings.find(s => s.name === 'Mode').value;
+    const stringToCheck = this.settings.find(s => s.name === 'String to Check').value.toLowerCase();
+
+    const newSelectedRanges = selectedRanges.filter(range => {
+      const selectedText = input.substring(range.start, range.end).toLowerCase();
+      return (mode === 'if not contains' && selectedText.includes(stringToCheck)) ||
+             (mode === 'if contains' && !selectedText.includes(stringToCheck));
+    });
+
+    return {
+      text: input,
+      selectedRanges: newSelectedRanges,
+    };
+  }
+}
+
+
+class SortLinesTransformer extends Transformer {
+  static displayName = 'Sort Lines';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Line Separator', 'string', '\n'));
+  }
+
+  transform(input, selectedRanges) {
+    const lineSeparator = this.settings.find(s => s.name === 'Line Separator').value;
+
+    // Split the input into lines
+    const lines = input.split(lineSeparator);
+
+    // Sort the lines alphabetically
+    const sortedLines = lines.sort((a, b) => a.localeCompare(b));
+
+    // Join the sorted lines back with the specified separator
+    const result = sortedLines.join(lineSeparator);
+
+    // Update selected ranges (no change in selection after sorting)
+    const newSelectedRanges = selectedRanges.map(range => ({ ...range }));
+
+    return {
+      text: result,
+      selectedRanges: newSelectedRanges,
+    };
+  }
+}
+
+
+class GrowSelectionTransformer extends Transformer {
+  static displayName = 'Grow Selection';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Start Growth', 'integer', 0));
+    this.settings.push(new Setting('End Growth', 'integer', 0));
+  }
+
+  transform(input, selectedRanges) {
+    const startGrowth = this.settings.find(s => s.name === 'Start Growth').value;
+    const endGrowth = this.settings.find(s => s.name === 'End Growth').value;
+
+    // Update selected ranges by growing them
+    const newSelectedRanges = selectedRanges.map(range => {
+      let start = Math.max(0, range.start);
+      let end = Math.min(input.length, range.end);
+
+      // Convert end to a number if it's a string
+      if (typeof end === 'string') {
+        end = parseInt(end, 10);
+      }
+
+      // Ensure that start is less than end
+      start = Math.min(start, end);
+
+      // Grow the range
+      start = Math.max(0, start - startGrowth);
+      end = Math.min(input.length, end + endGrowth);
+
+      // Ensure that start is less than end after growth
+      if (start >= end) {
+        start = end - 1;
+      }
+
+      return { start, end };
+    });
+
+    return {
+      text: input,
+      selectedRanges: newSelectedRanges,
+    };
+  }
+}
+
+
+
+
+
+const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer];
+
+
+
+
+
+
+
+function addTransformerButtons() {
+  const addTransformerButtonsContainer = document.getElementById('addTransformerButtonsContainer');
+  addTransformerButtonsContainer.innerHTML = '';
+
+  transformerClasses.forEach(transformerClass => {
+    const button = document.createElement('button');
+    button.textContent = `Add ${transformerClass.displayName} Transformer`;
+    button.onclick = () => addTransformer(transformerClass);
+    addTransformerButtonsContainer.appendChild(button);
+  });
+}
 
 // Main application logic
 const addTransformerButtonsContainer = document.getElementById('addTransformerButtonsContainer');
@@ -124,40 +552,11 @@ const outputTextElement = document.getElementById('outputText');
 const transformers = [];
 
 // Function to add a transformer button
-function addTransformerButton(transformerType) {
-  const button = document.createElement('button');
-  button.textContent = `Add ${transformerType} Transformer`;
-  button.onclick = () => addTransformer(transformerType);
-  addTransformerButtonsContainer.appendChild(button);
-}
+
 
 // Function to add a transformer to the chain
-function addTransformer(transformerType) {
-  let transformer;
-  switch (transformerType) {
-    case 'Replace':
-      transformer = new ReplaceTransformer();
-      break;
-    case 'Duplicate':
-      transformer = new DuplicateTransformer();
-      break;
-    case 'Reverse':
-      transformer = new ReverseTransformer();
-      break;
-    case 'Escape Url':
-      transformer = new EscapeUrlTransformer();
-      break;
-    case 'Unescape Url':
-      transformer = new UnescapeUrlTransformer();
-      break;
-    case 'Case Converter':
-      transformer = new CaseConverterTransformer();
-      break;
-
-    // Add more transformer types as needed
-    default:
-      console.error(`Unknown transformer type: ${transformerType}`);
-  }
+function addTransformer(transformerClass) {
+  const transformer = new transformerClass();
 
   // Clone the settings array to ensure independence
   transformer.settings = transformer.settings.map(setting => ({ ...setting }));
@@ -186,7 +585,7 @@ function updateTransformerButtonsAndSettings() {
 
     const transformerHeader = document.createElement('div');
     transformerHeader.className = 'transformerHeader';
-    transformerHeader.textContent = transformer.constructor.name;
+    transformerHeader.textContent = transformer.constructor.displayName;
 
     const removeButton = document.createElement('button');
     removeButton.textContent = 'Remove';
@@ -200,30 +599,30 @@ function updateTransformerButtonsAndSettings() {
     settingsDiv.className = 'settings';
 
     transformer.settings.forEach(setting => {
-  const settingLabel = document.createElement('label');
-  settingLabel.textContent = setting.name;
+      const settingLabel = document.createElement('label');
+      settingLabel.textContent = setting.name;
 
-  let settingInput;
+      let settingInput;
 
-  if (setting.dataType === 'select') {
-    settingInput = document.createElement('select');
-    setting.options.forEach(option => {
-      const optionElement = document.createElement('option');
-      optionElement.value = option;
-      optionElement.text = option;
-      settingInput.add(optionElement);
+      if (setting.dataType === 'select') {
+        settingInput = document.createElement('select');
+        setting.options.forEach(option => {
+          const optionElement = document.createElement('option');
+          optionElement.value = option;
+          optionElement.text = option;
+          settingInput.add(optionElement);
+        });
+        settingInput.value = setting.value;
+      } else {
+        settingInput = document.createElement('input');
+        settingInput.type = 'text';
+        settingInput.value = setting.value;
+      }
+
+      settingInput.id = `${transformer.constructor.name}_${transformer.id}_${setting.name.replace(/\s+/g, '_')}Setting`;
+      settingLabel.appendChild(settingInput);
+      settingsDiv.appendChild(settingLabel);
     });
-    settingInput.value = setting.value;
-  } else {
-    settingInput = document.createElement('input');
-    settingInput.type = 'text';
-    settingInput.value = setting.value;
-  }
-
-  settingInput.id = `${transformer.constructor.name}_${transformer.id}_${setting.name.replace(/\s+/g, '_')}Setting`;
-  settingLabel.appendChild(settingInput);
-  settingsDiv.appendChild(settingLabel);
-});
 
     transformerDiv.appendChild(settingsDiv);
     transformersContainer.appendChild(transformerDiv);
@@ -231,25 +630,77 @@ function updateTransformerButtonsAndSettings() {
 }
 
 
-// ... (rest of the code) ...
 
-
+// Function to perform text transformation
 // Function to perform text transformation
 function transformText() {
   const inputText = document.getElementById('inputText').value;
 
   // Apply transformations
   let result = inputText;
+  let selectedRanges = [{ start: 0, end: inputText.length }]; // Initially, consider the entire text as selected
+
   transformers.forEach(transformer => {
     transformer.applySettings(); // Update settings before transforming
-    result = transformer.transform(result);
+    console.log(`Applying ${transformer.constructor.displayName} transformer:`);
+    console.log('Input Text:', result);
+    console.log('Selected Ranges:', selectedRanges);
+    
+    
+    const transformedResult = transformer.transform(result, selectedRanges);
+    console.log('Transformed Text:', transformedResult.text);
+    console.log('New Selected Ranges:', transformedResult.selectedRanges || selectedRanges);
+
+    result = transformedResult.text;
+    selectedRanges = transformedResult.selectedRanges || selectedRanges;
   });
 
-  // Display the final result
-  outputTextElement.value = result;
+  // Create a temporary container to store formatted text
+  const formattedText = [];
+
+  // Generate formatted text
+  let lastIndex = 0;
+  let colorToggle = false;
+  selectedRanges.forEach(range => {
+    // Unselected text before the selected range
+    const unselectedText = result.substring(lastIndex, range.start);
+    if (unselectedText) {
+      formattedText.push(`<span style="background-color: #F2F3F4;">${unselectedText}</span>`);
+    }
+
+    // Selected text
+    const selectedText = result.substring(range.start, range.end);
+	if (colorToggle){
+		formattedText.push(`<span style="background-color: yellow;">${selectedText}</span>`);
+	}else{
+		formattedText.push(`<span style="background-color: #F4D03F;">${selectedText}</span>`);
+	}
+	
+    
+
+    lastIndex = range.end; // Update the last index
+	colorToggle = !colorToggle;
+  });
+
+  // Unselected text after the last selected range
+  const unselectedTextAfter = result.substring(lastIndex);
+  if (unselectedTextAfter) {
+    formattedText.push(`<span style="background-color: #F2F3F4;">${unselectedTextAfter}</span>`);
+  }
+
+  // Combine formatted text into a single string
+  const finalText = formattedText.join('');
+
+  // Display the final result with formatted text
+  outputTextElement.innerHTML = finalText;
 }
 
-// ... (previous code) ...
+
+
+
+
+
+
 
 // Function to export user settings
 function exportSettings() {
@@ -296,18 +747,29 @@ function importSettings() {
       importedSettings.transformers.forEach(importedTransformer => {
         let transformer;
         switch (importedTransformer.type) {
-          case 'ReplaceTransformer':
-            transformer = new ReplaceTransformer();
-            break;
-          case 'DuplicateTransformer':
-            transformer = new DuplicateTransformer();
-            break; // Add the case for the new transformer type
+  case 'Replace':
+    transformer = new ReplaceTransformer();
+    break;
+  case 'Duplicate':
+    transformer = new DuplicateTransformer();
+    break;
+  case 'Reverse':
+    transformer = new ReverseTransformer();
+    break;
+  case 'Escape URL':
+    transformer = new EscapeUrlTransformer();
+    break;
+  case 'Unescape URL':
+    transformer = new UnescapeUrlTransformer();
+    break;
+  case 'Case converter':
+    transformer = new CaseConverterTransformer();
+    break;
+  default:
+    console.error(`Unknown transformer type: ${importedTransformer.type}`);
+    return;
+}
 
-          // Add more transformer types as needed
-          default:
-            console.error(`Unknown transformer type: ${importedTransformer.type}`);
-            return; // Skip unknown transformer types
-        }
 
         transformer.settings.forEach((importedSetting, index) => {
           // Update the settings with imported values
@@ -329,11 +791,4 @@ function importSettings() {
 
 
 
-// Initial setup - Add transformer buttons
-addTransformerButton('Replace');
-addTransformerButton('Duplicate');
-addTransformerButton('Reverse');
-addTransformerButton('Escape Url');
-addTransformerButton('Unescape Url');
-addTransformerButton('Case Converter');
-// Add more transformer buttons as needed
+addTransformerButtons();
