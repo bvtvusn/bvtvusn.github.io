@@ -264,22 +264,27 @@ class CaseConverterTransformer extends Transformer {
 
 
 
-
-// Concrete transformer class: SelectTextTransformer
 class SelectTextTransformer extends Transformer {
   static displayName = 'Select Text';
 
   constructor() {
     super();
     this.settings.push(new Setting('Text to Select', 'string', ''));
+    this.settings.push(new Setting('Case Sensitivity', 'select', 'caseSensitive', ['caseSensitive', 'caseInsensitive']));
+    this.settings.push(new Setting('Invert Selection', 'select', 'includeSelected', ['includeSelected', 'excludeSelected']));
   }
 
   transform(input, selectedRanges) {
     const textToSelect = this.settings.find(s => s.name === 'Text to Select').value;
+    const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value;
+    const invertSelection = this.settings.find(s => s.name === 'Invert Selection').value;
+
     if (textToSelect.length < 1) {
       return { text: input, selectedRanges: [] };
     }
-    const regex = new RegExp(textToSelect, 'g');
+
+    const flags = caseSensitivity === 'caseSensitive' ? 'g' : 'gi'; // 'g' for global match, 'i' for case-insensitive
+    const regex = new RegExp(textToSelect, flags);
     let match;
     const newSelectedRanges = [];
 
@@ -289,12 +294,134 @@ class SelectTextTransformer extends Transformer {
       newSelectedRanges.push({ start, end });
     }
 
+    let finalSelectedRanges = newSelectedRanges;
+
+    if (invertSelection === 'excludeSelected') {
+      const fullTextRange = { start: 0, end: input.length };
+      finalSelectedRanges = subtractRanges(fullTextRange, newSelectedRanges);
+    }
+
     return {
       text: input,
-      selectedRanges: newSelectedRanges,
+      selectedRanges: finalSelectedRanges,
     };
   }
 }
+
+// Helper function to subtract ranges
+function subtractRanges(fullRange, subtractRange) {
+  const result = [];
+  let start = fullRange.start;
+
+  subtractRange.forEach(subtract => {
+    if (subtract.start > start) {
+      result.push({ start, end: subtract.start });
+    }
+    start = subtract.end;
+  });
+
+  if (start < fullRange.end) {
+    result.push({ start, end: fullRange.end });
+  }
+
+  return result;
+}
+
+
+class SelectCharacterTransformer extends Transformer {
+  static displayName = 'Select Characters';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Characters to Select', 'string', ''));
+    this.settings.push(new Setting('Case Sensitivity', 'select', 'caseSensitive', ['caseSensitive', 'caseInsensitive']));
+    this.settings.push(new Setting('Invert Selection', 'select', 'includeSelected', ['includeSelected', 'excludeSelected']));
+  }
+
+  transform(input, selectedRanges) {
+    const charactersToSelect = this.settings.find(s => s.name === 'Characters to Select').value;
+    const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value;
+    const invertSelection = this.settings.find(s => s.name === 'Invert Selection').value;
+
+    if (charactersToSelect.length < 1) {
+      return { text: input, selectedRanges: [] };
+    }
+
+    const isMatchArray = createMatchArray(input, charactersToSelect, caseSensitivity);
+
+    const newSelectedRanges = createSelectionRanges(input, isMatchArray);
+
+    let finalSelectedRanges = newSelectedRanges;
+
+    if (invertSelection === 'excludeSelected') {
+      const fullTextRange = { start: 0, end: input.length };
+      finalSelectedRanges = subtractRanges(fullTextRange, newSelectedRanges);
+    }
+
+    return {
+      text: input,
+      selectedRanges: finalSelectedRanges,
+    };
+  }
+}
+
+function createMatchArray(input, charactersToSelect, caseSensitivity) {
+  const isMatchArray = new Array(input.length).fill(false);
+
+  const flags = caseSensitivity === 'caseSensitive' ? 'g' : 'gi'; // 'g' for global match, 'i' for case-insensitive
+  const regexPattern = charactersToSelect.split('').map(char => escapeRegExp(char)).join('|');
+  const regex = new RegExp(`(${regexPattern})`, flags);
+
+  let match;
+  while ((match = regex.exec(input)) !== null) {
+    const start = match.index;
+    const end = start + match[0].length;
+    for (let i = start; i < end; i++) {
+      isMatchArray[i] = true;
+    }
+  }
+
+  return isMatchArray;
+}
+
+// Helper function to create selection ranges from the boolean array
+function createSelectionRanges(input, isMatchArray) {
+  const newSelectedRanges = [];
+  let isInMatch = false;
+  let matchStart = 0;
+
+  for (let i = 0; i < input.length; i++) {
+    if (isMatchArray[i]) {
+      if (!isInMatch) {
+        // Start of a new match
+        matchStart = i;
+        isInMatch = true;
+      }
+    } else if (isInMatch) {
+      // End of the current match
+      const matchEnd = i;
+      newSelectedRanges.push({ start: matchStart, end: matchEnd });
+      isInMatch = false;
+    }
+  }
+
+  if (isInMatch) {
+    // Handle the case where the last character is part of a match
+    const matchEnd = input.length;
+    newSelectedRanges.push({ start: matchStart, end: matchEnd });
+  }
+
+  return newSelectedRanges;
+}
+// Helper function to escape special characters for use in a regular expression
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+
+
+
+
 
 class SelectBetweenDelimitersTransformer extends Transformer {
   static displayName = 'Select Between Delimiters';
@@ -525,7 +652,7 @@ class GrowSelectionTransformer extends Transformer {
 
 
 
-const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer];
+const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer];
 
 
 
@@ -572,9 +699,6 @@ function removeTransformer(index) {
   updateTransformerButtonsAndSettings();
 }
 
-// ... (previous code) ...
-
-// Function to update transformer buttons and settings
 function updateTransformerButtonsAndSettings() {
   const transformersContainer = document.getElementById('transformersContainer');
   transformersContainer.innerHTML = '';
@@ -599,6 +723,9 @@ function updateTransformerButtonsAndSettings() {
     settingsDiv.className = 'settings';
 
     transformer.settings.forEach(setting => {
+      const settingContainer = document.createElement('div');
+      settingContainer.className = 'settingContainer';
+
       const settingLabel = document.createElement('label');
       settingLabel.textContent = setting.name;
 
@@ -613,6 +740,10 @@ function updateTransformerButtonsAndSettings() {
           settingInput.add(optionElement);
         });
         settingInput.value = setting.value;
+      } else if (setting.dataType === 'boolean') {
+        settingInput = document.createElement('input');
+        settingInput.type = 'checkbox';
+        settingInput.checked = setting.value;
       } else {
         settingInput = document.createElement('input');
         settingInput.type = 'text';
@@ -621,7 +752,8 @@ function updateTransformerButtonsAndSettings() {
 
       settingInput.id = `${transformer.constructor.name}_${transformer.id}_${setting.name.replace(/\s+/g, '_')}Setting`;
       settingLabel.appendChild(settingInput);
-      settingsDiv.appendChild(settingLabel);
+      settingContainer.appendChild(settingLabel);
+      settingsDiv.appendChild(settingContainer);
     });
 
     transformerDiv.appendChild(settingsDiv);
@@ -631,7 +763,6 @@ function updateTransformerButtonsAndSettings() {
 
 
 
-// Function to perform text transformation
 // Function to perform text transformation
 function transformText() {
   const inputText = document.getElementById('inputText').value;
