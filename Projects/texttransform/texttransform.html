@@ -6,33 +6,160 @@
   <title>Text Transformer</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .header {
+      background-color: #3498db;
+      color: #fff;
+      padding: 15px 0; /* Adjusted padding */
+      text-align: center;
+      width: 100%; /* Make header fill the width */
+    }
+
+    .left-part,
+    .right-part {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 20px;
+    }
+
+    .text-area {
+      width: 100%;
+    }
+
+    .action-button {
+      padding: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .action-button:hover {
+      background-color: #2980b9;
+    }
+
+    .highlight-button {
+      background-color: #3498db;
+      color: #fff;
+    }
+
+    .highlight-button:hover {
+      background-color: #2580b8;
+    }
+
+    .transform-button {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+
+    .transform-button:hover {
+      background-color: #29b765;
+    }
+
+    .formatted-text {
+      margin-top: 15px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 50px;
+    }
+
+    .flex-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .flex-col {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .left-part {
+      border-right: 1px solid #ddd;
+    }
+
+    .add-buttons-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .add-buttons-container button {
+      flex: 1 0 45%;
+      background-color: #3498db;
+      color: #fff;
+      margin: 5px;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .add-buttons-container button:hover {
+      background-color: #2580b8;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- Left Part (Controls) -->
-    <div class="left-part">
+    <div class="header">
       <h1 class="app-title">Text Transformer</h1>
-
-      <div id="addTransformerButtonsContainer" class="add-buttons-container">
-        <!-- Add Transformer buttons will be added here -->
-      </div>
-
-      <button class="action-button highlight-button" onclick="exportSettings()">Export Settings</button>
-      <button class="action-button highlight-button" onclick="importSettings()">Import Settings</button>
     </div>
 
-    <!-- Right Part (Transformation Process) -->
-    <div class="right-part">
-      <label class="input-label" for="inputText">Input Text:</label>
-      <textarea id="inputText" class="text-area" rows="4" cols="30"></textarea>
-      <button class="action-button transform-button" onclick="transformText()">Transform</button>
+    <div class="flex-row">
+      <!-- Left Part (Controls) -->
+      <div class="left-part">
+        <!-- Add Transformer buttons -->
+        <div id="addTransformerButtonsContainer" class="add-buttons-container">
+          <!-- Add Transformer buttons will be added here dynamically -->
+        </div>
 
-      <div id="transformersContainer">
-        <!-- Transformer buttons and settings will be dynamically added here -->
+        <!-- Export/Import Settings -->
+        <button class="action-button highlight-button" onclick="exportSettings()">Export Settings</button>
+        <textarea id="importExportTextarea" class="text-area" rows="5" cols="5" placeholder="Paste exported settings here"></textarea>
+        <button class="action-button highlight-button" onclick="importSettings()">Import Settings</button>
       </div>
 
-      <label class="output-label" for="outputText">Output Text:</label>
-      <div id="outputText" class="formatted-text" readonly></div>
+      <!-- Right Part (Transformation Process) -->
+      <div class="right-part">
+        <!-- Input Text Area -->
+        <label class="input-label" for="inputText">Input Text:</label>
+        <textarea id="inputText" class="text-area" rows="6" cols="30" placeholder="Enter your text here"></textarea>
+
+
+        <!-- Transformers Container -->
+        <div id="transformersContainer">
+          <!-- Transformer buttons and settings will be dynamically added here -->
+        </div>
+		
+        <!-- Transform Button -->
+        <button class="action-button transform-button" onclick="transformText()">Transform</button>
+
+        <!-- Output Text Area -->
+        <label class="output-label" for="outputText">Output Text:</label>
+        <div id="outputText" class="formatted-text"></div>
+        <button class="action-button transform-button" onclick="copyToClipboard()">Copy to Clipboard</button>
+      </div>
     </div>
   </div>
 
