@@ -608,38 +608,30 @@ class GrowSelectionTransformer extends Transformer {
 
   constructor() {
     super();
-    this.settings.push(new Setting('Start Growth', 'integer', 0));
-    this.settings.push(new Setting('End Growth', 'integer', 0));
+    this.settings.push(new Setting('Grow Start By', 'integer', 0));
+    this.settings.push(new Setting('Grow End By', 'integer', 0));
   }
 
   transform(input, selectedRanges) {
-    const startGrowth = this.settings.find(s => s.name === 'Start Growth').value;
-    const endGrowth = this.settings.find(s => s.name === 'End Growth').value;
+    console.log('Selected Ranges (Before Conversion):', selectedRanges);
 
-    // Update selected ranges by growing them
-    const newSelectedRanges = selectedRanges.map(range => {
-      let start = Math.max(0, range.start);
-      let end = Math.min(input.length, range.end);
+    const growStartBy = parseInt(this.settings.find(s => s.name === 'Grow Start By').value, 10);
+    const growEndBy = parseInt(this.settings.find(s => s.name === 'Grow End By').value, 10);
+    console.log('Grow Start By:', growStartBy);
+    console.log('Grow End By:', growEndBy);
 
-      // Convert end to a number if it's a string
-      if (typeof end === 'string') {
-        end = parseInt(end, 10);
-      }
+    const newSelectedRanges = [];
 
-      // Ensure that start is less than end
-      start = Math.min(start, end);
+    for (let i = 0; i < selectedRanges.length; i++) {
+      const range = selectedRanges[i];
+      const newRange = {
+        start: Math.max(range.start - growStartBy, 0),
+        end: Math.min(range.end + growEndBy, input.length),
+      };
+      newSelectedRanges.push(newRange);
+    }
 
-      // Grow the range
-      start = Math.max(0, start - startGrowth);
-      end = Math.min(input.length, end + endGrowth);
-
-      // Ensure that start is less than end after growth
-      if (start >= end) {
-        start = end - 1;
-      }
-
-      return { start, end };
-    });
+    console.log('Selected Ranges (After Conversion):', newSelectedRanges);
 
     return {
       text: input,
@@ -647,6 +639,8 @@ class GrowSelectionTransformer extends Transformer {
     };
   }
 }
+
+
 
 
 
@@ -821,102 +815,78 @@ function transformText() {
 
   // Combine formatted text into a single string
   const finalText = formattedText.join('');
-
+	console.log(finalText)
   // Display the final result with formatted text
   outputTextElement.innerHTML = finalText;
 }
 
 
 
+// Function to copy the output text to the clipboard
+function copyToClipboard() {
+    const outputTextElement = document.getElementById('outputText');
+    const outputText = outputTextElement.textContent;
 
+    const textarea = document.createElement('textarea');
+    textarea.value = outputText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
 
+    //alert('Text copied to clipboard!');
+}
 
-
-
-// Function to export user settings
 function exportSettings() {
-  const exportedSettings = {
-    transformers: transformers.map(transformer => {
-      return {
-        type: transformer.constructor.name,
-        settings: transformer.settings.map(setting => {
-          return {
-            name: setting.name,
-            dataType: setting.dataType,
-            value: setting.value,
-            options: setting.options,
-          };
-        }),
-      };
-    }),
-  };
+  const exportedConfig = transformers.map(transformer => {
+    return {
+      transformerClass: transformer.constructor.name,
+      settings: transformer.settings.map(setting => {
+        return {
+          name: setting.name,
+          value: setting.value
+        };
+      })
+    };
+  });
 
-  const exportedSettingsJSON = JSON.stringify(exportedSettings, null, 2);
-
-  // Display the exported settings in a new window
-  const exportWindow = window.open('', 'Exported Settings', 'width=600,height=400');
-  exportWindow.document.open();
-  exportWindow.document.write(`<pre>${exportedSettingsJSON}</pre>`);
-  exportWindow.document.close();
+  const exportedText = JSON.stringify(exportedConfig);
+  document.getElementById('importExportTextarea').value = exportedText;
 }
 
+// Function to import a transformer pipeline configuration
 function importSettings() {
-  const importSettingsJSON = prompt('Paste the exported settings JSON here:');
+  const inputText = document.getElementById('importExportTextarea').value;
+  if (!inputText) return; // No input
 
-  if (importSettingsJSON) {
-    try {
-      const importedSettings = JSON.parse(importSettingsJSON);
+  try {
+    const importedConfig = JSON.parse(inputText);
+    if (!Array.isArray(importedConfig)) throw new Error('Invalid configuration format');
 
-      if (!importedSettings || !Array.isArray(importedSettings.transformers)) {
-        throw new Error('Invalid settings structure.');
-      }
+    // Clear existing transformers
+    transformers.length = 0;
 
-      // Clear existing transformers
-      transformers.length = 0;
+    // Create transformers based on the imported configuration
+    importedConfig.forEach(config => {
+      const transformerClass = transformerClasses.find(tc => tc.name === config.transformerClass);
+      if (!transformerClass) throw new Error(`Transformer class not found: ${config.transformerClass}`);
 
-      // Create transformers from imported settings
-      importedSettings.transformers.forEach(importedTransformer => {
-        let transformer;
-        switch (importedTransformer.type) {
-  case 'Replace':
-    transformer = new ReplaceTransformer();
-    break;
-  case 'Duplicate':
-    transformer = new DuplicateTransformer();
-    break;
-  case 'Reverse':
-    transformer = new ReverseTransformer();
-    break;
-  case 'Escape URL':
-    transformer = new EscapeUrlTransformer();
-    break;
-  case 'Unescape URL':
-    transformer = new UnescapeUrlTransformer();
-    break;
-  case 'Case converter':
-    transformer = new CaseConverterTransformer();
-    break;
-  default:
-    console.error(`Unknown transformer type: ${importedTransformer.type}`);
-    return;
-}
-
-
-        transformer.settings.forEach((importedSetting, index) => {
-          // Update the settings with imported values
-          if (transformer.settings[index] && importedSetting) {
-            transformer.settings[index].value = importedSetting.value;
-          }
-        });
-
-        transformers.push(transformer);
+      const transformer = new transformerClass();
+      transformer.settings.forEach(setting => {
+        const importedSetting = config.settings.find(s => s.name === setting.name);
+        if (importedSetting) {
+          setting.value = importedSetting.value;
+        }
       });
 
-      updateTransformerButtonsAndSettings();
-    } catch (error) {
-      console.error('Error importing settings:', error);
-      alert('Error importing settings. Please make sure the provided JSON is valid.');
-    }
+      transformers.push(transformer);
+    });
+
+    // Update UI with imported transformers
+    updateTransformerButtonsAndSettings();
+  } catch (error) {
+    console.error('Error importing configuration:', error.message);
+    alert('Error importing configuration. Please check the format and try again.');
   }
 }
 
