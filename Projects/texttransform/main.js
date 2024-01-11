@@ -45,30 +45,60 @@ class Transformer {
   }
 }
 
-// Concrete transformer class: ReplaceTransformer
+
 class ReplaceTransformer extends Transformer {
   static displayName = 'Replace';
+
   constructor() {
     super();
     this.settings.push(new Setting('Find Text', 'string', 'cat'));
     this.settings.push(new Setting('Replace Text', 'string', 'dog'));
+    this.settings.push(new Setting('Case Sensitivity', 'select', 'Case Insensitive', ['Case Sensitive', 'Case Insensitive']));
   }
 
   transform(input, selectedRanges) {
     const findText = this.settings.find(s => s.name === 'Find Text').value;
     const replaceText = this.settings.find(s => s.name === 'Replace Text').value;
+    const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value === 'Case Sensitive';
 
+    // Create the data structure
+    const dataStructure = [];
+    let currentIndex = 0;
+    let replacedRanges = []; // To store the ranges of replaced words
+
+    // Populate the data structure with chunks of the input string
     selectedRanges.forEach(range => {
-      const start = range.start;
-      const end = range.end;
-      const selectedText = input.substring(start, end);
-      const replacedText = selectedText.replace(new RegExp(findText, 'g'), replaceText);
-      input = input.substring(0, start) + replacedText + input.substring(end);
+      // Add non-matching text before the selected range
+      if (currentIndex < range.start) {
+        dataStructure.push({ text: input.substring(currentIndex, range.start), isMatch: false });
+      }
+
+      // Add the selected range
+      const selectedText = input.substring(range.start, range.end);
+      const matchRegExp = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseSensitivity ? 'g' : 'gi');
+      const replacedText = selectedText.replace(matchRegExp, (match, offset) => {
+        const start = range.start + offset;
+        const end = start + replaceText.length;
+        replacedRanges.push({ start, end });
+        return replaceText;
+      });
+
+      dataStructure.push({ text: replacedText, isMatch: true });
+      currentIndex = range.end;
     });
 
-    return { text: input, selectedRanges };
+    // Add the remaining non-matching text after the last selected range
+    if (currentIndex < input.length) {
+      dataStructure.push({ text: input.substring(currentIndex), isMatch: false });
+    }
+
+    // Convert the data structure back to a string
+    const transformedText = dataStructure.map(chunk => chunk.text).join('');
+
+    return { text: transformedText, selectedRanges: replacedRanges };
   }
 }
+
 
 
 
@@ -207,7 +237,7 @@ class CaseConverterTransformer extends Transformer {
 
 //console.log(`Test Result for ${this.constructor.displayName}:`, transformedText.text);
     // Log the result to the console
-    console.log(`Test Result for ${this.constructor.displayName}:`, transformedText.text);
+    //console.log(`Test Result for ${this.constructor.displayName}:`, transformedText.text);
   }
   
   transform(input, selectedRanges) {
@@ -613,12 +643,12 @@ class GrowSelectionTransformer extends Transformer {
   }
 
   transform(input, selectedRanges) {
-    console.log('Selected Ranges (Before Conversion):', selectedRanges);
+    //console.log('Selected Ranges (Before Conversion):', selectedRanges);
 
     const growStartBy = parseInt(this.settings.find(s => s.name === 'Grow Start By').value, 10);
     const growEndBy = parseInt(this.settings.find(s => s.name === 'Grow End By').value, 10);
-    console.log('Grow Start By:', growStartBy);
-    console.log('Grow End By:', growEndBy);
+    //console.log('Grow Start By:', growStartBy);
+    //console.log('Grow End By:', growEndBy);
 
     const newSelectedRanges = [];
 
@@ -631,7 +661,7 @@ class GrowSelectionTransformer extends Transformer {
       newSelectedRanges.push(newRange);
     }
 
-    console.log('Selected Ranges (After Conversion):', newSelectedRanges);
+    //console.log('Selected Ranges (After Conversion):', newSelectedRanges);
 
     return {
       text: input,
@@ -640,13 +670,22 @@ class GrowSelectionTransformer extends Transformer {
   }
 }
 
+class SelectAllTransformer extends Transformer {
+  static displayName = 'Select All';
+
+  transform(input, selectedRanges) {
+    // Select the entire input text
+    const newSelectedRanges = [{ start: 0, end: input.length }];
+
+    return { text: input, selectedRanges: newSelectedRanges };
+  }
+}
 
 
 
 
 
-
-const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer];
+const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer,SelectAllTransformer];
 
 
 
@@ -757,7 +796,6 @@ function updateTransformerButtonsAndSettings() {
 
 
 
-// Function to perform text transformation
 function transformText() {
   const inputText = document.getElementById('inputText').value;
 
@@ -767,17 +805,64 @@ function transformText() {
 
   transformers.forEach(transformer => {
     transformer.applySettings(); // Update settings before transforming
-    console.log(`Applying ${transformer.constructor.displayName} transformer:`);
-    console.log('Input Text:', result);
-    console.log('Selected Ranges:', selectedRanges);
-    
-    
+    //console.log(`Applying ${transformer.constructor.displayName} transformer:`);
+    //console.log('Input Text:', result);
+    //console.log('Selected Ranges:', selectedRanges);
+
     const transformedResult = transformer.transform(result, selectedRanges);
-    console.log('Transformed Text:', transformedResult.text);
-    console.log('New Selected Ranges:', transformedResult.selectedRanges || selectedRanges);
+    //console.log('Transformed Text:', transformedResult.text);
+    //console.log('New Selected Ranges:', transformedResult.selectedRanges || selectedRanges);
 
     result = transformedResult.text;
     selectedRanges = transformedResult.selectedRanges || selectedRanges;
+  });
+
+  // Check selectedRanges integrity
+  if (!Array.isArray(selectedRanges)) {
+    console.warn('Warning: selectedRanges is not an array.');
+	alert('Warning: selectedRanges is not an array.');
+    return;
+  }
+
+  // Sort selectedRanges based on the start value
+  selectedRanges.sort((a, b) => a.start - b.start);
+
+  // Check for overlapping ranges
+  for (let i = 0; i < selectedRanges.length - 1; i++) {
+    const currentRange = selectedRanges[i];
+    const nextRange = selectedRanges[i + 1];
+
+    if (currentRange.end > nextRange.start) {
+      console.warn('Warning: Overlapping ranges detected.');
+	  alert('Warning: Overlapping ranges detected.');
+      return;
+    }
+  }
+
+  // Check that start and end are integers and within bounds
+  selectedRanges.forEach(range => {
+	  sErr = "";
+	  if (!Number.isInteger(range.start) || !Number.isInteger(range.end)){
+		  sErr += "Not int "
+	  }
+	  if (range.start < 0 || range.end > result.length+1){
+		  sErr += "Outside string length "
+	  }
+	  if (range.start >= range.end){
+		  sErr += "end before start "
+	  }
+	  if (sErr.length > 0){
+		  console.log(range);
+		  console.log(selectedRanges);
+		  console.warn('Warning: Invalid range detected.');
+		  alert('Warning: ' + sErr);
+	  }
+	  
+    //if (!Number.isInteger(range.start) || !Number.isInteger(range.end) ||
+    //    range.start < 0 || range.end > result.length+1 || range.start >= range.end) {
+			
+      return;
+    
   });
 
   // Create a temporary container to store formatted text
@@ -795,16 +880,14 @@ function transformText() {
 
     // Selected text
     const selectedText = result.substring(range.start, range.end);
-	if (colorToggle){
-		formattedText.push(`<span style="background-color: yellow;">${selectedText}</span>`);
-	}else{
-		formattedText.push(`<span style="background-color: #F4D03F;">${selectedText}</span>`);
-	}
-	
-    
+    if (colorToggle) {
+      formattedText.push(`<span style="background-color: yellow;">${selectedText}</span>`);
+    } else {
+      formattedText.push(`<span style="background-color: #F4D03F;">${selectedText}</span>`);
+    }
 
     lastIndex = range.end; // Update the last index
-	colorToggle = !colorToggle;
+    colorToggle = !colorToggle;
   });
 
   // Unselected text after the last selected range
@@ -815,7 +898,7 @@ function transformText() {
 
   // Combine formatted text into a single string
   const finalText = formattedText.join('');
-	console.log(finalText)
+  console.log(finalText);
   // Display the final result with formatted text
   outputTextElement.innerHTML = finalText;
 }
