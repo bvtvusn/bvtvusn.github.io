@@ -57,10 +57,18 @@ class ReplaceTransformer extends Transformer {
   }
 
   transform(input, selectedRanges) {
-    const findText = this.settings.find(s => s.name === 'Find Text').value;
-    const replaceText = this.settings.find(s => s.name === 'Replace Text').value;
+    let findText = this.settings.find(s => s.name === 'Find Text').value;
+    let replaceText = this.settings.find(s => s.name === 'Replace Text').value;
     const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value === 'Case Sensitive';
-
+	
+	// Replace "\n" with newline character
+    findText = findText.replace(/\\n/g, '\n');
+    replaceText = replaceText.replace(/\\n/g, '\n');
+    // Replace "\t" with tab character
+    findText = findText.replace(/\\t/g, '\t');
+    replaceText = replaceText.replace(/\\t/g, '\t');
+	
+	
     // Create the data structure
     const dataStructure = [];
     let currentIndex = 0;
@@ -98,6 +106,7 @@ class ReplaceTransformer extends Transformer {
     return { text: transformedText, selectedRanges: replacedRanges };
   }
 }
+
 
 
 
@@ -369,9 +378,14 @@ class SelectCharacterTransformer extends Transformer {
   }
 
   transform(input, selectedRanges) {
-    const charactersToSelect = this.settings.find(s => s.name === 'Characters to Select').value;
+    let charactersToSelect = this.settings.find(s => s.name === 'Characters to Select').value;
     const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value;
     const invertSelection = this.settings.find(s => s.name === 'Invert Selection').value;
+
+    // Replace "\n" with newline character
+    charactersToSelect = charactersToSelect.replace(/\\n/g, '\n');
+    // Replace "\t" with tab character
+    charactersToSelect = charactersToSelect.replace(/\\t/g, '\t');
 
     if (charactersToSelect.length < 1) {
       return { text: input, selectedRanges: [] };
@@ -394,6 +408,8 @@ class SelectCharacterTransformer extends Transformer {
     };
   }
 }
+
+
 
 function createMatchArray(input, charactersToSelect, caseSensitivity) {
   const isMatchArray = new Array(input.length).fill(false);
@@ -539,13 +555,12 @@ class InvertSelectionTransformer extends Transformer {
 }
 
 
-// Concrete transformer class: DeleteTextTransformer
 class DeleteTextTransformer extends Transformer {
   static displayName = 'Delete Text';
 
   constructor() {
     super();
-    // Delete Text transformer doesn't have specific settings
+    this.settings.push(new Setting('Replacement Text', 'string', ''));
   }
 
   transform(input, selectedRanges) {
@@ -557,10 +572,18 @@ class DeleteTextTransformer extends Transformer {
     // Sort selected ranges to simplify deletion
     selectedRanges.sort((a, b) => a.start - b.start);
 
+    const replacementText = this.settings.find(s => s.name === 'Replacement Text').value;
+    const processedReplacement = this.processReplacement(replacementText);
     let result = '';
+    let newSelectionRange = { start: -1, end: -1 };
 
     // Delete text before the first selected range
     result += input.substring(0, selectedRanges[0].start);
+
+    // Replace deleted text with replacement text
+    result += processedReplacement;
+    newSelectionRange.start = selectedRanges[0].start;
+    newSelectionRange.end = newSelectionRange.start + processedReplacement.length;
 
     // Delete text between consecutive selected ranges
     for (let i = 0; i < selectedRanges.length - 1; i++) {
@@ -570,9 +593,17 @@ class DeleteTextTransformer extends Transformer {
     // Delete text after the last selected range
     result += input.substring(selectedRanges[selectedRanges.length - 1].end);
 
-    return { text: result, selectedRanges: [] };
+    return { text: result, selectedRanges: [newSelectionRange] };
+  }
+
+  processReplacement(replacement) {
+    // Replace \n with newline and \t with tab
+    return replacement.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
   }
 }
+
+
+
 
 
 class DeselectIfTransformer extends Transformer {
@@ -681,11 +712,53 @@ class SelectAllTransformer extends Transformer {
   }
 }
 
+class InsertAtIndexTransformer extends Transformer {
+  static displayName = 'Insert at Index';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Insert Index', 'number', 0));
+    this.settings.push(new Setting('Insert Word', 'string', ''));
+  }
+
+  transform(input, selectedRanges) {
+    const insertIndex = this.settings.find(s => s.name === 'Insert Index').value;
+    const insertWord = this.settings.find(s => s.name === 'Insert Word').value;
+
+    if (!Array.isArray(selectedRanges) || selectedRanges.length === 0) {
+      // No selected text, nothing to insert
+      return { text: input, selectedRanges: [] };
+    }
+
+    // Sort selected ranges to simplify insertion
+    selectedRanges.sort((a, b) => a.start - b.start);
+
+    let result = '';
+    let newSelectionRanges = [];
+
+    // Insert text at the specified index in each selected range
+    for (const range of selectedRanges) {
+      const beforeInsertion = input.substring(range.start, range.start + insertIndex);
+      const afterInsertion = input.substring(range.start + insertIndex, range.end);
+      const newText = beforeInsertion + insertWord + afterInsertion;
+
+      result += newText;
+
+      // Update the selection range to include the inserted word
+      newSelectionRanges.push({
+        start: range.start + insertIndex,
+        end: range.start + insertIndex + insertWord.length,
+      });
+    }
+
+    return { text: result, selectedRanges: newSelectionRanges };
+  }
+}
 
 
 
 
-const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer,SelectAllTransformer];
+const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer,SelectAllTransformer,InsertAtIndexTransformer];
 
 
 
@@ -699,7 +772,7 @@ function addTransformerButtons() {
 
   transformerClasses.forEach(transformerClass => {
     const button = document.createElement('button');
-    button.textContent = `Add ${transformerClass.displayName} Transformer`;
+    button.textContent = `${transformerClass.displayName}`;
     button.onclick = () => addTransformer(transformerClass);
     addTransformerButtonsContainer.appendChild(button);
   });
@@ -848,7 +921,7 @@ function transformText() {
 	  if (range.start < 0 || range.end > result.length+1){
 		  sErr += "Outside string length "
 	  }
-	  if (range.start >= range.end){
+	  if (range.start > range.end){
 		  sErr += "end before start "
 	  }
 	  if (sErr.length > 0){
