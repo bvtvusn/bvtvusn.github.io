@@ -1,26 +1,38 @@
 body {
   font-family: 'Roboto', sans-serif;
   margin: 0;
+  background-color: #f2f2f2;
 }
 
 .container {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   max-width: 800px;
   margin: 20px auto;
 }
 
-.left-part {
-  width: 45%;
+.header {
+  background-color: #3498db;
+  color: #fff;
+  padding: 15px 0;
+  text-align: center;
 }
 
+.flex-row {
+  display: flex;
+  width: 100%;
+}
+
+.left-part,
 .right-part {
-  width: 45%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px;
 }
 
-.app-title {
-  font-size: 24px;
-  margin-bottom: 20px;
+.text-area {
+  width: 100%;
 }
 
 .action-button {
@@ -45,11 +57,6 @@ body {
   display: block;
   font-size: 16px;
   margin-bottom: 5px;
-}
-
-.text-area {
-  width: 100%;
-  margin-bottom: 10px;
 }
 
 .transform-button {
@@ -97,3 +104,43 @@ body {
   padding: 5px;
   box-sizing: border-box;
 }
+/* ... existing styles ... */
+
+.add-buttons-container {
+  background-color: #3498db; /* Blue container background color */
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.add-buttons-container button {
+  flex: 1 0 45%; /* Two columns, adjust as needed */
+  background-color: #ecf0f1; /* Lighter background color */
+  color: #2c3e50; /* Darker text color */
+  margin: 5px;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-buttons-container button:hover {
+  background-color: #bdc3c7; /* Adjusted background color on hover */
+}
+
+
+/* Output Text Area styling to resemble a textarea */
+.formatted-text {
+  margin-top: 15px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 100px; /* Adjusted minimum height */
+  font-family: 'Courier New', monospace; /* Monospace font for better readability */
+  white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+}
+
+/* ... rest of the styles ... */
