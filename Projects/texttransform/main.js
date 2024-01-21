@@ -46,6 +46,67 @@ class Transformer {
 }
 
 
+function addToSubstringArray(inputText, substringArray, start, end, isSelected) {
+  const substring = inputText.substring(start, end);
+  substringArray.push({ substring, isSelected });
+}
+function buildSubstringArray(inputText, selectedRanges) {
+  const substringArray = [];
+
+  // Sort selectedRanges by start values in ascending order
+  selectedRanges.sort((a, b) => a.start - b.start);
+
+  let prevEnd = 0;
+
+  for (const { start, end } of selectedRanges) {
+    // Add the non-selected part before the current range
+    if (start > prevEnd) {
+      addToSubstringArray(inputText, substringArray, prevEnd, start, false);
+    }
+
+    // Add the selected part
+    addToSubstringArray(inputText, substringArray, start, end, true);
+
+    // Update the previous end position
+    prevEnd = end;
+  }
+
+  // Add the remaining non-selected part after the last range
+  if (prevEnd < inputText.length) {
+    addToSubstringArray(inputText, substringArray, prevEnd, inputText.length, false);
+  }
+
+  return substringArray;
+}
+function modifySubstringArray(substringArray, findText, replaceText, caseSensitivity) {
+	console.log(substringArray);
+  for (const entry of substringArray) {
+    if (entry.isSelected) {
+      // Perform the replacement based on user settings
+      const matchRegExp = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseSensitivity ? 'g' : 'gi');
+      entry.substring = entry.substring.replace(matchRegExp, replaceText);
+    }
+  }
+}
+
+function extractSelections(substringArray) {
+  let extractedText = "";
+  let extractedRanges = [];
+
+  for (const entry of substringArray) {
+    extractedText += entry.substring ;
+
+    if (entry.isSelected) {
+      const start = extractedText.length - entry.substring.length;
+      const end = extractedText.length;
+      extractedRanges.push({ start, end });
+    }
+  }
+
+  return { modifiedText: extractedText, extractedRanges };
+}
+
+
 class ReplaceTransformer extends Transformer {
   static displayName = 'Replace';
 
@@ -56,54 +117,75 @@ class ReplaceTransformer extends Transformer {
     this.settings.push(new Setting('Case Sensitivity', 'select', 'Case Insensitive', ['Case Sensitive', 'Case Insensitive']));
   }
 
+ modifySubstringArray_replace(substringArray, findText, replaceText, caseSensitivity) {
+  for (let i = 0; i < substringArray.length; i++) {
+    const entry = substringArray[i];
+
+    if (entry.isSelected) {
+      // Find all matches in the substring
+      const matchRegExp = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseSensitivity ? 'g' : 'gi');
+      let match;
+      let lastIndex = 0;
+
+      while ((match = matchRegExp.exec(entry.substring)) !== null) {
+        // Add the non-matching text before the match
+        if (lastIndex < match.index) {
+          const nonMatchingSubstring = entry.substring.slice(lastIndex, match.index);
+          substringArray.splice(i, 0, { substring: nonMatchingSubstring, isSelected: false });
+          i++;
+        }
+
+        // Add the matching text
+        const matchingSubstring = match[0];
+        substringArray.splice(i, 0, { substring: matchingSubstring, isSelected: true });
+        i++;
+
+        lastIndex = match.index + matchingSubstring.length;
+      }
+
+      // Add the remaining non-matching text after the last match
+      if (lastIndex < entry.substring.length) {
+        const nonMatchingSubstring = entry.substring.slice(lastIndex);
+        substringArray.splice(i, 0, { substring: nonMatchingSubstring, isSelected: false });
+        i++;
+      }
+
+      // Remove the original substring object
+      substringArray.splice(i, 1);
+      i--;
+    }
+  }
+}
+
   transform(input, selectedRanges) {
     let findText = this.settings.find(s => s.name === 'Find Text').value;
     let replaceText = this.settings.find(s => s.name === 'Replace Text').value;
     const caseSensitivity = this.settings.find(s => s.name === 'Case Sensitivity').value === 'Case Sensitive';
-	
-	// Replace "\n" with newline character
+
+    // Replace "\n" with newline character
     findText = findText.replace(/\\n/g, '\n');
     replaceText = replaceText.replace(/\\n/g, '\n');
     // Replace "\t" with tab character
     findText = findText.replace(/\\t/g, '\t');
     replaceText = replaceText.replace(/\\t/g, '\t');
-	
-	
+
     // Create the data structure
-    const dataStructure = [];
-    let currentIndex = 0;
-    let replacedRanges = []; // To store the ranges of replaced words
+    let substringArray = buildSubstringArray(input, selectedRanges);
 
-    // Populate the data structure with chunks of the input string
-    selectedRanges.forEach(range => {
-      // Add non-matching text before the selected range
-      if (currentIndex < range.start) {
-        dataStructure.push({ text: input.substring(currentIndex, range.start), isMatch: false });
+    // Modify the data structure based on replacement settings
+    this.modifySubstringArray_replace(substringArray, findText, replaceText, caseSensitivity);
+
+    // Overwrite the string in objects with isSelected=true with the replace string
+    for (const entry of substringArray) {
+      if (entry.isSelected) {
+        entry.substring = replaceText;
       }
-
-      // Add the selected range
-      const selectedText = input.substring(range.start, range.end);
-      const matchRegExp = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseSensitivity ? 'g' : 'gi');
-      const replacedText = selectedText.replace(matchRegExp, (match, offset) => {
-        const start = range.start + offset;
-        const end = start + replaceText.length;
-        replacedRanges.push({ start, end });
-        return replaceText;
-      });
-
-      dataStructure.push({ text: replacedText, isMatch: true });
-      currentIndex = range.end;
-    });
-
-    // Add the remaining non-matching text after the last selected range
-    if (currentIndex < input.length) {
-      dataStructure.push({ text: input.substring(currentIndex), isMatch: false });
     }
 
-    // Convert the data structure back to a string
-    const transformedText = dataStructure.map(chunk => chunk.text).join('');
+    // Call the extractSelections function
+    const extractionResult = extractSelections(substringArray);
 
-    return { text: transformedText, selectedRanges: replacedRanges };
+    return { text: extractionResult.modifiedText, selectedRanges: extractionResult.extractedRanges };
   }
 }
 
@@ -712,46 +794,42 @@ class SelectAllTransformer extends Transformer {
   }
 }
 
+
 class InsertAtIndexTransformer extends Transformer {
   static displayName = 'Insert at Index';
 
   constructor() {
     super();
+    this.settings.push(new Setting('Insert Text', 'string', 'inserted'));
     this.settings.push(new Setting('Insert Index', 'number', 0));
-    this.settings.push(new Setting('Insert Word', 'string', ''));
+    this.settings.push(new Setting('Insert Position', 'select', 'From Left', ['From Left', 'From Right']));
+  }
+
+  modifySubstringArray_insert(substringArray, insertText, insertIndex, insertPosition) {
+    for (const entry of substringArray) {
+      if (entry.isSelected) {
+        // Perform the insertion based on user settings
+        const position = insertPosition === 'From Left' ? insertIndex : entry.substring.length - insertIndex;
+        entry.substring = entry.substring.slice(0, position) + insertText + entry.substring.slice(position);
+      }
+    }
   }
 
   transform(input, selectedRanges) {
+    const insertText = this.settings.find(s => s.name === 'Insert Text').value;
     const insertIndex = this.settings.find(s => s.name === 'Insert Index').value;
-    const insertWord = this.settings.find(s => s.name === 'Insert Word').value;
+    const insertPosition = this.settings.find(s => s.name === 'Insert Position').value;
 
-    if (!Array.isArray(selectedRanges) || selectedRanges.length === 0) {
-      // No selected text, nothing to insert
-      return { text: input, selectedRanges: [] };
-    }
+    // Create the data structure
+    const substringArray = buildSubstringArray(input, selectedRanges);
 
-    // Sort selected ranges to simplify insertion
-    selectedRanges.sort((a, b) => a.start - b.start);
+    // Modify the data structure based on insertion settings
+    this.modifySubstringArray_insert(substringArray, insertText, insertIndex, insertPosition);
 
-    let result = '';
-    let newSelectionRanges = [];
+    // Call the extractSelections function
+    const extractionResult = extractSelections(substringArray);
 
-    // Insert text at the specified index in each selected range
-    for (const range of selectedRanges) {
-      const beforeInsertion = input.substring(range.start, range.start + insertIndex);
-      const afterInsertion = input.substring(range.start + insertIndex, range.end);
-      const newText = beforeInsertion + insertWord + afterInsertion;
-
-      result += newText;
-
-      // Update the selection range to include the inserted word
-      newSelectionRanges.push({
-        start: range.start + insertIndex,
-        end: range.start + insertIndex + insertWord.length,
-      });
-    }
-
-    return { text: result, selectedRanges: newSelectionRanges };
+    return { text: extractionResult.modifiedText, selectedRanges: extractionResult.extractedRanges };
   }
 }
 
