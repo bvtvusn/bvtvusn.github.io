@@ -7,9 +7,11 @@ body {
 .container {
   display: flex;
   flex-direction: column;
-  max-width: 800px;
-  margin: 20px auto;
+  width: 100%;
+  
+  max-width: none; /* Remove the maximum width */
 }
+
 
 .header {
   background-color: #3498db;
@@ -23,12 +25,24 @@ body {
   width: 100%;
 }
 
-.left-part,
+
 .right-part {
   display: flex;
   flex-direction: column;
   flex: 1;
   padding: 20px;
+}
+
+.left-part {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  width: 100%; /* Initially take full width */
+
+  /* Additional styles for fixed width at larger screens */
+  @media (min-width: 768px) {
+    width: 350px; /* Adjust the width as needed */
+  }
 }
 
 .text-area {
@@ -82,11 +96,20 @@ body {
   background-color: #d62c1a;
 }
 
-/* Styles for Transformers */
 .transformer {
   border: 2px solid #333;
   padding: 10px;
-  margin: 10px 0;
+  margin: 5px auto; /* Adjust the top and bottom margin as needed */
+  width: 250px;
+  box-sizing: border-box;
+  flex: 0 0 calc(250px - 20px);
+}
+
+/* Additional style for larger screens */
+@media (min-width: 768px) {
+  .transformersContainer {
+    justify-content: flex-start; /* Align left on larger screens */
+  }
 }
 
 .transformerHeader {
@@ -142,5 +165,3 @@ body {
   font-family: 'Courier New', monospace; /* Monospace font for better readability */
   white-space: pre-wrap; /* Preserve whitespace and wrap lines */
 }
-
-/* ... rest of the styles ... */
