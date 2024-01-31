@@ -1072,28 +1072,28 @@ function copyToClipboard() {
 }
 
 function exportSettings() {
-  const exportedConfig = transformers.map(transformer => {
-    return {
-      transformerClass: transformer.constructor.name,
-      settings: transformer.settings.map(setting => {
-        return {
-          name: setting.name,
-          value: setting.value
-        };
-      })
-    };
-  });
+  const exportedConfig = transformers.map(transformer => ({
+    [transformer.constructor.name]: transformer.settings.reduce((acc, setting) => {
+      acc[setting.name] = setting.value;
+      return acc;
+    }, {})
+  }));
 
   const exportedText = JSON.stringify(exportedConfig);
+  const base64Encoded = btoa(exportedText); // Encode to Base64
   document.getElementById('importExportTextarea').value = exportedText;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set('config', base64Encoded);
+  window.history.replaceState({}, document.title, `${window.location.pathname}?${urlParams}`);
 }
 
-// Function to import a transformer pipeline configuration
 function importSettings() {
   const inputText = document.getElementById('importExportTextarea').value;
   if (!inputText) return; // No input
 
   try {
+    // const base64Decoded = atob(inputText); // Decode from Base64
     const importedConfig = JSON.parse(inputText);
     if (!Array.isArray(importedConfig)) throw new Error('Invalid configuration format');
 
@@ -1102,14 +1102,14 @@ function importSettings() {
 
     // Create transformers based on the imported configuration
     importedConfig.forEach(config => {
-      const transformerClass = transformerClasses.find(tc => tc.name === config.transformerClass);
-      if (!transformerClass) throw new Error(`Transformer class not found: ${config.transformerClass}`);
+      const transformerClass = transformerClasses.find(tc => tc.name === Object.keys(config)[0]);
+      if (!transformerClass) throw new Error(`Transformer class not found: ${Object.keys(config)[0]}`);
 
       const transformer = new transformerClass();
       transformer.settings.forEach(setting => {
-        const importedSetting = config.settings.find(s => s.name === setting.name);
-        if (importedSetting) {
-          setting.value = importedSetting.value;
+        const importedSetting = config[transformerClass.name][setting.name];
+        if (importedSetting !== undefined) {
+          setting.value = importedSetting;
         }
       });
 
@@ -1124,6 +1124,17 @@ function importSettings() {
   }
 }
 
+function LoadUrlSettings() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const importedText = urlParams.get('config');
+  if (!importedText) return; // No configuration in the URL
 
+  // Decode Base64 before setting in textarea
+  const decodedText = atob(importedText);
+  document.getElementById('importExportTextarea').value = decodedText;
+
+  importSettings();
+}
 
 addTransformerButtons();
+LoadUrlSettings();
