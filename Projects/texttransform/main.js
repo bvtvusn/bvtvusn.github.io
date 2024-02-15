@@ -834,9 +834,66 @@ class InsertAtIndexTransformer extends Transformer {
 }
 
 
+class Base64Transformer extends Transformer {
+  static displayName = 'Base64';
+
+  constructor() {
+    super();
+    this.settings.push(new Setting('Operation', 'select', 'Encode', ['Encode', 'Decode']));
+  }
+
+  modifySubstringArray_base64(substringArray, operation) {
+    for (let i = 0; i < substringArray.length; i++) {
+      const entry = substringArray[i];
+
+      if (entry.isSelected) {
+        const selectedText = entry.substring;
+        let convertedText;
+
+        // Apply base64 encoding or decoding based on the operation
+        if (operation === 'Encode') {
+          convertedText = btoa(selectedText);
+        } else {
+          convertedText = atob(selectedText);
+        }
+
+        // Calculate the length difference
+        const lengthDifference = convertedText.length - selectedText.length;
+
+        // Replace the substring with the converted text
+        entry.substring = convertedText;
+
+        // Adjust the length of the entry's substring
+        entry.end += lengthDifference;
+
+        // Adjust subsequent selected ranges
+        for (let j = i + 1; j < substringArray.length; j++) {
+          substringArray[j].start += lengthDifference;
+          substringArray[j].end += lengthDifference;
+        }
+      }
+    }
+  }
+
+  transform(input, selectedRanges) {
+    const operation = this.settings.find(s => s.name === 'Operation').value;
+
+    // Create the data structure
+    let substringArray = buildSubstringArray(input, selectedRanges);
+
+    // Modify the data structure based on the base64 operation
+    this.modifySubstringArray_base64(substringArray, operation);
+
+    // Call the extractSelections function
+    const extractionResult = extractSelections(substringArray);
+
+    return { text: extractionResult.modifiedText, selectedRanges: extractionResult.extractedRanges };
+  }
+}
 
 
-const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer,SelectAllTransformer,InsertAtIndexTransformer];
+
+const transformerClasses = [ReplaceTransformer, DuplicateTransformer,ReverseTransformer,EscapeUrlTransformer,UnescapeUrlTransformer,CaseConverterTransformer,SelectTextTransformer , SelectBetweenDelimitersTransformer,InvertSelectionTransformer,DeleteTextTransformer, DeselectIfTransformer,SortLinesTransformer, GrowSelectionTransformer, SelectCharacterTransformer,SelectAllTransformer,InsertAtIndexTransformer,Base64Transformer];
 
 
 
@@ -949,23 +1006,27 @@ function updateTransformerButtonsAndSettings() {
 
 function transformText() {
   const inputText = document.getElementById('inputText').value;
-
+  const errorMessageTextarea = document.getElementById('errorMessage');
+  errorMessageTextarea.textContent   = ''; // Clear previous errors
+  
   // Apply transformations
   let result = inputText;
   let selectedRanges = [{ start: 0, end: inputText.length }]; // Initially, consider the entire text as selected
-
+let counter = 0;
   transformers.forEach(transformer => {
     transformer.applySettings(); // Update settings before transforming
-    //console.log(`Applying ${transformer.constructor.displayName} transformer:`);
-    //console.log('Input Text:', result);
-    //console.log('Selected Ranges:', selectedRanges);
-
+	counter +=1;
+    
+try {
     const transformedResult = transformer.transform(result, selectedRanges);
-    //console.log('Transformed Text:', transformedResult.text);
-    //console.log('New Selected Ranges:', transformedResult.selectedRanges || selectedRanges);
-
     result = transformedResult.text;
     selectedRanges = transformedResult.selectedRanges || selectedRanges;
+	} catch (error) {
+      errorMessageTextarea.textContent   += `Error in transformer ${counter} (${transformer.constructor.displayName}): ${error.message}\n`;
+	//alert(`Error in ${transformer.constructor.displayName}: ${error.message}\n`);   
+   }
+	
+	
   });
 
   // Check selectedRanges integrity
