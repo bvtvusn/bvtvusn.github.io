@@ -47,6 +47,9 @@ body {
 
 .text-area {
   width: 100%;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
 }
 
 .action-button {
@@ -165,3 +168,5 @@ body {
   font-family: 'Courier New', monospace; /* Monospace font for better readability */
   white-space: pre-wrap; /* Preserve whitespace and wrap lines */
 }
+
+/* ... rest of the styles ... */
