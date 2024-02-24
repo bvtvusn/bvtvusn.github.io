@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fading Images</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        position: relative;
+    }
+
+    .image-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        transition: opacity 1s ease-in-out;
+    }
+
+    .image-hidden {
+        opacity: 0;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.7);
+        padding: 20px;
+        border-radius: 5px;
+        display: none;
+    }
+</style>
+</head>
+<body>
+<div class="image-container" id="image1"></div>
+<div class="image-container image-hidden" id="image2"></div>
+<div class="overlay" id="overlay">Next Picture</div>
+
+<script src="imageList.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const image1 = document.getElementById("image1");
+        const image2 = document.getElementById("image2");
+        const overlay = document.getElementById("overlay");
+        let index = 0;
+        let intervalId = null;
+        let delay = 10000; // Initial delay in milliseconds
+
+        function fadeInOut() {
+            index = (index + 1) % imageList.length;
+            const currentImage = index % 2 === 0 ? image1 : image2;
+            const nextImage = index % 2 === 0 ? image2 : image1;
+
+            nextImage.style.backgroundImage = `url(${imageList[index]})`;
+            nextImage.classList.remove("image-hidden");
+            currentImage.classList.add("image-hidden");
+        }
+
+        function startSlideshow() {
+            intervalId = setInterval(fadeInOut, delay);
+        }
+
+        function pauseSlideshow() {
+            clearInterval(intervalId);
+        }
+
+        function increaseDelay() {
+            delay += 1000; // Increase delay by 1 second
+            clearInterval(intervalId);
+            startSlideshow();
+        }
+
+        function decreaseDelay() {
+            if (delay > 1000) { // Ensure delay doesn't go below 1 second
+                delay -= 1000; // Decrease delay by 1 second
+                clearInterval(intervalId);
+                startSlideshow();
+            }
+        }
+
+        function showOverlay(text) {
+            overlay.textContent = text;
+            overlay.style.display = "block";
+            setTimeout(() => {
+                overlay.style.display = "none";
+            }, 1000); // Hide overlay after 2 seconds
+        }
+
+        startSlideshow(); // Start slideshow initially
+
+        document.addEventListener("keydown", function(event) {
+            switch (event.key) {
+                case " ": // Space key for pause/resume
+                    if (intervalId) {
+                        pauseSlideshow();
+                        intervalId = null;
+                        showOverlay("Slideshow paused");
+                    } else {
+                        startSlideshow();
+                        showOverlay("Slideshow resumed");
+                    }
+                    break;
+                case "+": // Plus key for increasing delay
+                    increaseDelay();
+                    showOverlay("Delay increased ("+ (delay/1000).toString() + "s)");
+                    break;
+                case "-": // Minus key for decreasing delay
+                    decreaseDelay();
+                    showOverlay("Delay decreased ("+ (delay/1000).toString() + "s)");
+                    break;
+                case "ArrowRight": // Right arrow key for next picture
+                    fadeInOut();
+                    showOverlay("Next picture");
+                    break;
+                case "ArrowLeft": // Left arrow key for previous picture
+                    index = (index - 2 + imageList.length) % imageList.length;
+                    fadeInOut();
+                    showOverlay("Previous picture");
+                    break;
+            }
+        });
+    });
+</script>
+</body>
+</html>
