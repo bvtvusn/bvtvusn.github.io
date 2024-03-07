@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Expression Plotter</title>
+</head>
+<body>
+    <h1>Math Expression Plotter</h1>
+    <p>Enter a mathematical expression:</p>
+    <input type="text" id="expressionInput" value="x*x">
+    <p>Enter the range for x values:</p>
+    <input type="number" id="xMin" placeholder="Minimum" value="-10">
+    <input type="number" id="xMax" placeholder="Maximum" value="10">
+    <p>Enter the number of x values:</p>
+    <input type="number" id="numPoints" value="100">
+    <button onclick="calculate()">Plot</button>
+    <svg id="plot" width="500" height="300"></svg>
+
+    <h2>Result Table</h2>
+    <table id="resultTable" border="1">
+        <thead>
+            <tr>
+                <th>x</th>
+                <th>y</th>
+            </tr>
+        </thead>
+        <tbody id="resultBody">
+        </tbody>
+    </table>
+
+    <script>
+        // Define a dictionary to store variable values
+        const variables = {
+            x: 0
+        };
+
+        // Define the Node class for the expression tree
+        class Node {
+            constructor(type, left = null, right = null, value = null) {
+                this.type = type;
+                this.left = left;
+                this.right = right;
+                this.value = value;
+            }
+
+            // Evaluate function for each node
+            eval() {
+                switch (this.type) {
+                    case 'value':
+                        return this.value;
+                    case 'variable':
+                        return variables[this.value];
+                    case 'addition':
+                        return this.left.eval() + this.right.eval();
+                    case 'subtraction':
+                        return this.left.eval() - this.right.eval();
+                    case 'multiplication':
+                        return this.left.eval() * this.right.eval();
+                    case 'division':
+                        return this.left.eval() / this.right.eval();
+                    case 'sine':
+                        return Math.sin(this.left.eval());
+                    case 'cosine':
+                        return Math.cos(this.left.eval());
+                    default:
+                        throw new Error('Invalid node type');
+                }
+            }
+        }
+
+        // Parse the expression and build the expression tree
+        function parseExpression(expression) {
+            // Tokenize the expression
+            const tokens = tokenize(expression);
+            // Build the expression tree from tokens
+            return buildExpressionTree(tokens);
+        }
+
+        // Tokenize the expression
+        function tokenize(expression) {
+            const regex = /\d+\.?\d*|[a-zA-Z]+|\+|\-|\*|\/|\(|\)|sin|cos/g;
+            return expression.match(regex);
+        }
+
+        // Build the expression tree from tokens
+        function buildExpressionTree(tokens) {
+            let index = 0;
+
+            function parsePrimary() {
+                const token = tokens[index++];
+
+                if (token === '(') {
+                    const node = parseAdditive();
+                    if (tokens[index++] !== ')') {
+                        throw new Error('Expected closing parenthesis');
+                    }
+                    return node;
+                }
+
+                if (!isNaN(parseFloat(token))) {
+                    return new Node('value', null, null, parseFloat(token));
+                }
+
+                if (!isNaN(token) || /^[a-zA-Z]+$/.test(token)) {
+                    return new Node('variable', null, null, token);
+                }
+
+                if (token === 'sin' || token === 'cos') {
+                    if (tokens[index++] !== '(') {
+                        throw new Error('Expected opening parenthesis after ' + token);
+                    }
+                    const expr = parseAdditive(); // Parse expression inside parentheses
+                    if (tokens[index++] !== ')') {
+                        throw new Error('Expected closing parenthesis after ' + token + ' argument');
+                    }
+                    return new Node(token === 'sin' ? 'sine' : 'cosine', expr);
+                }
+
+                if (token === '-') {
+                    // If left node is missing, set it to zero explicitly
+                    if (tokens[index] === undefined || tokens[index] === '+' || tokens[index] === '-' || tokens[index] === '*' || tokens[index] === '/' || tokens[index] === '(') {
+                        return new Node('subtraction', new Node('value', null, null, 0), parsePrimary());
+                    } else {
+                        const expr = parsePrimary();
+                        return new Node('subtraction', new Node('value', null, null, 0), expr);
+                    }
+                }
+
+                throw new Error('Unexpected token: ' + token);
+            }
+
+            function parseMultiplicative() {
+                let node = parsePrimary();
+
+                while (index < tokens.length) {
+                    const token = tokens[index];
+                    if (token === '*' || token === '/') {
+                        index++;
+                        const right = parsePrimary();
+                        node = new Node(token === '*' ? 'multiplication' : 'division', node, right);
+                    } else {
+                        break;
+                    }
+                }
+
+                return node;
+            }
+
+            function parseAdditive() {
+                let node = parseMultiplicative();
+
+                while (index < tokens.length) {
+                    const token = tokens[index];
+                    if (token === '+' || token === '-') {
+                        index++;
+                        const right = parseMultiplicative();
+                        node = new Node(token === '+' ? 'addition' : 'subtraction', node, right);
+                    } else {
+                        break;
+                    }
+                }
+
+                return node;
+            }
+
+            return parseAdditive();
+        }
+
+        // Calculate the expression for given x range and number of x values, and plot the result
+        function calculate() {
+            const expressionInput = document.getElementById('expressionInput').value;
+            const plot = document.getElementById('plot');
+            const resultBody = document.getElementById('resultBody');
+            const xMin = parseFloat(document.getElementById('xMin').value);
+            const xMax = parseFloat(document.getElementById('xMax').value);
+            const numPoints = parseInt(document.getElementById('numPoints').value);
+            plot.innerHTML = '';
+            resultBody.innerHTML = '';
+
+            // Parse the expression
+            const expressionTree = parseExpression(expressionInput);
+
+            const points = [];
+
+            // Calculate the x values
+            const step = (xMax - xMin) / (numPoints - 1);
+            for (let i = 0; i < numPoints; i++) {
+                const x = xMin + step * i;
+                variables.x = x;
+                const y = expressionTree.eval();
+                points.push({ x, y });
+            }
+
+            // Find min and max values
+            const minX = Math.min(...points.map(point => point.x));
+            const maxX = Math.max(...points.map(point => point.x));
+            const minY = Math.min(...points.map(point => point.y));
+            const maxY = Math.max(...points.map(point => point.y));
+
+            // Calculate scaling factors
+            const scaleX = 450 / (maxX - minX);
+            const scaleY = 250 / (maxY - minY);
+
+            // Draw the plot
+            for (let i = 0; i < points.length - 1; i++) {
+                const x1 = (points[i].x - minX) * scaleX;
+                const y1 = 300 - (points[i].y - minY) * scaleY;
+                const x2 = (points[i + 1].x - minX) * scaleX;
+                const y2 = 300 - (points[i + 1].y - minY) * scaleY;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', 'black');
+                plot.appendChild(line);
+            }
+
+            // Generate the x/y table
+            for (let i = 0; i < points.length; i++) {
+                const row = `<tr><td>${points[i].x}</td><td>${points[i].y}</td></tr>`;
+                resultBody.insertAdjacentHTML('beforeend', row);
+            }
+        }
+    </script>
+</body>
+</html>
