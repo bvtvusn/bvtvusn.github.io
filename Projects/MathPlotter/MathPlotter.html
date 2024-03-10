@@ -158,6 +158,8 @@
                         return Math.tan(this.left.eval());
                     case 'abs':
                         return Math.abs(this.left.eval());
+					case 'power':
+                        return Math.pow(this.left.eval(), this.right.eval());
                     default:
                         throw new Error('Invalid node type');
                 }
