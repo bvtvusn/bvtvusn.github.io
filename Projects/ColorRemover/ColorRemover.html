@@ -3,107 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remove Background from Image</title>
+    <title>Background Remover Tool</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             text-align: center;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
         }
-        #dropArea {
-            border: 2px dashed #ccc;
-            width: 300px;
-            padding: 20px;
+        #image-container {
+             position: relative;
+            display: inline-block;
             margin: 20px auto;
-            text-align: center;
-            cursor: pointer;
+            text-align: center; /* Center the image */
         }
-        #output {
-            margin-top: 20px;
-            display: none;
-            text-align: center;
-        }
-        #originalImage, #convertedImage, #selectionMask {
-            max-width: 100%;
-            display: block;
-            margin: 0 auto;
-        }
-        button {
-            margin-top: 10px;
-        }
-        #controls {
-            margin-top: 10px;
-        }
-        #blurSlider {
-            width: 80%;
-            margin: 0 auto;
-        }
-        #sharpenButton {
-            margin-top: 10px;
-        }
-        #checkerboard {
-            width: fit-content;
-            height: fit-content;
-            background:
+        #background-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
                 linear-gradient(45deg, #ccc 25%, transparent 25%),
                 linear-gradient(-45deg, #ccc 25%, transparent 25%),
                 linear-gradient(45deg, transparent 75%, #ccc 75%),
                 linear-gradient(-45deg, transparent 75%, #ccc 75%);
             background-size: 20px 20px;
             background-position: 0 0, 10px 0, 10px -10px, 0px 10px;
+            z-index: 0;
+        }
+        #image-preview {
+            position: relative;
+            z-index: 1;
+        }
+        #mask-preview {
+            max-width: 100%;
+            display: none;
+            margin: 20px auto; /* Center the mask preview */
+        }
+        button {
+            margin-top: 10px;
+        }
+        canvas {
+            border: 2px solid #000;
+            display: block;
+            margin: 0 auto;
+        }
+        .color-square {
+            width: 20px;
+            height: 20px;
             display: inline-block;
+            margin-left: 5px;
+            border: 1px solid #000;
         }
-        #colorPicker {
-            margin-top: 10px;
+        #drop-area {
+            border: 2px dashed #ccc;
+            width: 300px;
+            padding: 20px;
+            margin: 20px auto;
+            cursor: pointer;
+            background: #fff;
         }
-        #brushSize {
-            margin-top: 10px;
-        }
-        #tolerance {
+        .control {
             margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="dropArea" ondrop="handleDrop(event)" ondragover="allowDrop(event)">
+    <div id="drop-area" ondrop="handleDrop(event)" ondragover="allowDrop(event)">
         <p>Drag and drop your image here or click to upload</p>
         <input type="file" accept="image/*" id="fileInput" style="display: none;">
     </div>
-    <div id="output">
-        <h2>Original Image</h2>
-        <img id="originalImage" src="" alt="Original Image">
-        <br><br>
-        <h2>Selection Mask</h2>
-        <div id="controls">
-            <input type="range" id="blurSlider" min="0" max="10" value="0" onchange="applyBlur()">
-            <button id="sharpenButton" onclick="sharpenSelectionMask()">Grow Selection</button>
-        </div>
-        <input type="color" id="colorPicker">
-        <input type="number" id="brushSize" min="1" max="100" value="1">
-        <input type="range" id="tolerance" min="0" max="255" value="10">
-        <button onclick="createSelectionMask()">Create Selection Mask</button>
-        <canvas id="selectionMask" style="border: 2px solid #000;"></canvas>
-        <button onclick="removeBackground()">Remove Background</button>
-        <br><br>
-        <h2>Converted Image</h2>
-        <div id="checkerboard">
-            <img id="convertedImage" src="" alt="Converted Image">
-        </div>
-        <br><br>
-        <a id="downloadLink" style="display: none;" download="output.png">Download PNG</a>
+    <div id="image-container">
+        <div id="background-pattern"></div>
+        <img id="image-preview" src="" alt="Image Preview" onclick="selectColor(event)">
     </div>
+    <br>
+    <button onclick="recalculateSelectionMask()">Recalculate Selection Mask</button>
+    
+	
+	<br>
+    <label for="applyBlurCheckbox">Apply Blur:</label>
+    <input type="checkbox" id="applyBlurCheckbox">
+    <input type="range" id="blurSlider" min="0" max="10" value="0">
+    <br>
+	
+	<div class="control">
+        <label for="applyThreshold">Apply Threshold</label>
+        <input type="checkbox" id="applyThreshold">
+    </div>
+    <div class="control">
+        <label for="threshold">Threshold:</label>
+        <input type="range" id="threshold" min="0" max="255" value="128">
+    </div>
+    <br>
+    <canvas id="selectionMask" style="display: none;"></canvas>
+    <div id="selected-color-info"></div>
+    <img id="mask-preview" src="" alt="Selection Mask Preview">
+
+    <canvas id="transparent-image" style="display: none;"></canvas>
+	<button onclick="downloadTransparentImage()">Download Transparent Image</button>
+
 
     <script>
-        let originalImage = document.getElementById('originalImage');
+        let imagePreview = document.getElementById('image-preview');
+        let maskPreview = document.getElementById('mask-preview');
+        let dropArea = document.getElementById('drop-area');
         let selectionMaskCanvas = document.getElementById('selectionMask');
-        let colorPicker = document.getElementById('colorPicker');
-        let brushSize = document.getElementById('brushSize');
-        let tolerance = document.getElementById('tolerance');
+        let transparentImageCanvas = document.getElementById('transparent-image');
+        let applyThresholdCheckbox = document.getElementById('applyThreshold');
+        let thresholdSlider = document.getElementById('threshold');
+		let applyBlurCheckbox = document.getElementById('applyBlurCheckbox');
         let blurSlider = document.getElementById('blurSlider');
-        let sharpenButton = document.getElementById('sharpenButton');
-        let output = document.getElementById('output');
-        let convertedImage = document.getElementById('convertedImage');
-        let downloadLink = document.getElementById('downloadLink');
-        let selectionMaskCtx = selectionMaskCanvas.getContext('2d');
-        let image = new Image();
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
 
         function handleDrop(event) {
             event.preventDefault();
@@ -111,167 +127,147 @@
             loadImage(file);
         }
 
-        function allowDrop(event) {
-            event.preventDefault();
-        }
-
         function loadImage(file) {
             let reader = new FileReader();
             reader.onload = function(event) {
-                originalImage.src = event.target.result;
-                output.style.display = 'block';
+                imagePreview.src = event.target.result;
+                imagePreview.style.display = 'block';
             };
             reader.readAsDataURL(file);
         }
 
-        function createSelectionMask() {
-            selectionMaskCanvas.width = originalImage.width;
-            selectionMaskCanvas.height = originalImage.height;
-            selectionMaskCtx.drawImage(originalImage, 0, 0);
+        function selectColor(event) {
+            let canvas = document.createElement('canvas');
+            canvas.width = imagePreview.width;
+            canvas.height = imagePreview.height;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(imagePreview, 0, 0);
+            let x = event.offsetX;
+            let y = event.offsetY;
+            let pixel = ctx.getImageData(x, y, 1, 1).data;
+            let color = 'rgb(' + pixel[0] + ', ' + pixel[1] + ', ' + pixel[2] + ')';
+            let colorSquare = document.createElement('div');
+            colorSquare.className = 'color-square';
+            colorSquare.style.backgroundColor = color;
+            document.getElementById('selected-color-info').innerHTML = 'Selected Color: ' + color;
+            document.getElementById('selected-color-info').appendChild(colorSquare);
+            document.getElementById('selectionMask').getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            generateSelectionMask(color);
+        }
 
-            let imageData = selectionMaskCtx.getImageData(0, 0, selectionMaskCanvas.width, selectionMaskCanvas.height);
+function applyBlur(data, imageData) {
+    let blurAmount = applyBlurCheckbox.checked ? parseInt(blurSlider.value) : 0;
+    if (blurAmount > 0) {
+        let tempCanvas = document.createElement('canvas');
+        let tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = imageData.width;
+        tempCanvas.height = imageData.height;
+        tempCtx.putImageData(imageData, 0, 0);
+        tempCtx.filter = `blur(${blurAmount}px)`;
+        tempCtx.drawImage(tempCanvas, 0, 0);
+        let blurredImageData = tempCtx.getImageData(0, 0, imageData.width, imageData.height);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = blurredImageData.data[i];
+        }
+    }
+}
+
+function recalculateSelectionMask() {
+	colorSquare = document.getElementsByClassName("color-square")[0];
+	color = colorSquare.style.backgroundColor;
+	generateSelectionMask(color);
+}
+
+function generateSelectionMask(color) {
+    if (color) {
+        let img = new Image();
+        img.onload = function() {
+            selectionMaskCanvas.width = img.width;
+            selectionMaskCanvas.height = img.height;
+            let ctx = selectionMaskCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            let imageData = ctx.getImageData(0, 0, selectionMaskCanvas.width, selectionMaskCanvas.height);
             let data = imageData.data;
+            let targetColor = parseRgb(color);
+            if (!targetColor) {
+                console.log('Error: targetColor is null');
+            }
+			applyBlur(data, imageData); // Apply blur
+            generateGrayScale(data, imageData, targetColor);
+        };
+        img.src = imagePreview.src;
+    } else {
+        alert('Please click on the image to select a color.');
+    }
+}
 
-            let targetColor = hexToRgb(colorPicker.value);
-            let toleranceValue = parseInt(tolerance.value);
+function generateGrayScale(data, imageData, targetColor) {
+    let threshold = applyThresholdCheckbox.checked ? parseInt(thresholdSlider.value) : -1;
+    for (let i = 0; i < data.length; i += 4) {
+        let red = data[i];
+        let green = data[i + 1];
+        let blue = data[i + 2];
+        let distance = Math.sqrt(Math.pow(red - targetColor.r, 2) + Math.pow(green - targetColor.g, 2) + Math.pow(blue - targetColor.b, 2));
+        let grayscale = distance;
+        if (threshold !== -1) {
+            grayscale = distance > threshold ? 255 : 0;
+        }
+        data[i] = grayscale;
+        data[i + 1] = grayscale;
+        data[i + 2] = grayscale;
+    }
+    let ctx = selectionMaskCanvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+    maskPreview.src = selectionMaskCanvas.toDataURL();
+    maskPreview.style.display = 'block';
+    createTransparentImage();
+}
 
-            for (let i = 0; i < data.length; i += 4) {
-                let red = data[i];
-                let green = data[i + 1];
-                let blue = data[i + 2];
+        function parseRgb(rgbString) {
+            let match = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            if (match) {
+                return {
+                    r: parseInt(match[1]),
+                    g: parseInt(match[2]),
+                    b: parseInt(match[3])
+                };
+            }
+            return null;
+        }
 
-                let distance = Math.sqrt(Math.pow(red - targetColor.r, 2) +
-                                         Math.pow(green - targetColor.g, 2) +
-                                         Math.pow(blue - targetColor.b, 2));
-
-                if (distance <= toleranceValue) {
-                    // If color is within tolerance, set the pixel to black
-                    data[i] = 0;
-                    data[i + 1] = 0;
-                    data[i + 2] = 0;
-                } else {
-                    // Otherwise, set the pixel to white
-                    data[i] = 255;
-                    data[i + 1] = 255;
-                    data[i + 2] = 255;
+        function createTransparentImage() {
+            let ctx = transparentImageCanvas.getContext('2d');
+            transparentImageCanvas.width = imagePreview.width;
+            transparentImageCanvas.height = imagePreview.height;
+            ctx.clearRect(0, 0, transparentImageCanvas.width, transparentImageCanvas.height);
+            let img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                let selectionImageData = selectionMaskCanvas.getContext('2d').getImageData(0, 0, selectionMaskCanvas.width, selectionMaskCanvas.height);
+                let imageData = ctx.getImageData(0, 0, transparentImageCanvas.width, transparentImageCanvas.height);
+                let data = imageData.data;
+                let selectionData = selectionImageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i + 3] = selectionData[i];
                 }
-
-                // Set alpha channel to 255 (opaque)
-                data[i + 3] = 255;
-            }
-
-            selectionMaskCtx.putImageData(imageData, 0, 0);
-
-            // Apply blur after creating the mask
-            applyBlur();
+                ctx.putImageData(imageData, 0, 0);
+                transparentImageCanvas.style.display = 'block';
+            };
+            img.src = imagePreview.src;
         }
+		function downloadTransparentImage() {
+        // Get the data URL of the transparent image canvas
+        let dataURL = transparentImageCanvas.toDataURL('image/png');
 
-        function applyBlur() {
-            let size = parseInt(blurSlider.value);
-            selectionMaskCtx.filter = `blur(${size}px)`;
-            selectionMaskCtx.drawImage(selectionMaskCanvas, 0, 0);
-            selectionMaskCtx.filter = 'none';
-        }
-
-        function sharpenSelectionMask() {
-            let imageData = selectionMaskCtx.getImageData(0, 0, selectionMaskCanvas.width, selectionMaskCanvas.height);
-            let data = imageData.data;
-
-            let colorCounts = new Array(256).fill(0);
-            let totalPixels = 0;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let luminance = Math.round(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
-                colorCounts[luminance]++;
-                totalPixels++;
-            }
-
-            let quarterPercentile = Math.floor(totalPixels / 4);
-
-            let sum = 0;
-            let threshold = 0;
-
-            for (let i = 0; i < 256; i++) {
-                sum += colorCounts[i];
-                if (sum > quarterPercentile) {
-                    threshold = i;
-                    break;
-                }
-            }
-
-            for (let i = 0; i < data.length; i += 4) {
-                let luminance = Math.round(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
-
-                if (luminance > threshold) {
-                    // Set pixel to white
-                    data[i] = 255;
-                    data[i + 1] = 255;
-                    data[i + 2] = 255;
-                } else if (luminance <= 64) {
-                    // Set pixel to black
-                    data[i] = 0;
-                    data[i + 1] = 0;
-                    data[i + 2] = 0;
-                } else {
-                    // Gradual transition from white to black
-                    let ratio = (luminance - 64) / (threshold - 64);
-                    let colorValue = Math.round(255 * ratio);
-
-                    data[i] = colorValue;
-                    data[i + 1] = colorValue;
-                    data[i + 2] = colorValue;
-                }
-
-                // Set alpha channel to 255 (opaque)
-                data[i + 3] = 255;
-            }
-
-            selectionMaskCtx.putImageData(imageData, 0, 0);
-
-            // Apply blur after sharpening
-            //applyBlur();
-        }
-
-        function removeBackground() {
-            let tempCanvas = document.createElement('canvas');
-            tempCanvas.width = originalImage.width;
-            tempCanvas.height = originalImage.height;
-            let tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(originalImage, 0, 0);
-
-            let selectionImageData = selectionMaskCtx.getImageData(0, 0, selectionMaskCanvas.width, selectionMaskCanvas.height);
-            let selectionData = selectionImageData.data;
-
-            let imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-            let data = imageData.data;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let alpha = selectionData[i]; // Use alpha from the selection mask
-                data[i + 3] = alpha; // Apply transparency from the selection mask
-            }
-
-            tempCtx.putImageData(imageData, 0, 0);
-            convertedImage.src = tempCanvas.toDataURL('image/png');
-
-            // Show download link
-            downloadLink.href = tempCanvas.toDataURL('image/png');
-            downloadLink.style.display = 'inline';
-        }
-
-        function hexToRgb(hex) {
-            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-            let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                return r + r + g + g + b + b;
-            });
-
-            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
+        // Create a temporary anchor element to trigger the download
+        let link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'transparent_image.png'; // Set the filename
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+		
     </script>
 </body>
 </html>
