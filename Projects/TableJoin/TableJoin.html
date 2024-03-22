@@ -1,66 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Values to JSON</title>
     <style>
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+            font-family: Arial, sans-serif;
         }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .table-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-data {
+            margin-right: 20px;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 1.2em;
+            color: #333;
+        }
+
         textarea {
-            width: 100%;
-            height: 50px;
+            width: 300px;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
         }
+
         table {
-            width: 100%;
             border-collapse: collapse;
+            width: 300px;
+            border-radius: 5px;
+            overflow: hidden;
         }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
+
+        th,
+        td {
+            padding: 10px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
-        .scrollable-table {
-            max-height: 200px; /* Adjust the maximum height as needed */
-            overflow-y: auto;
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .option-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 0.9em;
+            color: #555;
+            margin-right: 5px;
+        }
+
+        select,
+        input[type="checkbox"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
+
 <body>
-    <h2>Text to Table A</h2>
-    <textarea id="inputDataA" placeholder="Paste values here..."></textarea><br>
-    Delimiter:
-    <select id="delimiterSelectA">
-        <option value="\t">Tab</option>
-        <option value=",">Comma (,)</option>
-        <option value=";">Semicolon (;)</option>
-        <option value=" ">Space</option>
-    </select><br>
-    <input type="checkbox" id="headerCheckboxA"> Data includes header<br>
+    <div class="container">
+        <!-- Table A -->
+        <div class="table-container">
+            <div class="table-data">
+                <h2>Table A</h2>
+                <textarea id="inputDataA" placeholder="Paste values here..."></textarea>
+            </div>
+            <div class="table-options">
+                <div class="option-group">
+                    <label for="delimiterSelectA">Delimiter:</label>
+                    <select id="delimiterSelectA">
+                        <option value="\t">Tab</option>
+                        <option value=",">Comma (,)</option>
+                        <option value=";">Semicolon (;)</option>
+                        <option value=" ">Space</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <input type="checkbox" id="headerCheckboxA">
+                    <label for="headerCheckboxA">Data includes header</label>
+                </div>
+            </div>
+            <div id="jsonTableA">
+                
+            </div>
+        </div>
 
-    <h2>JSON Table A</h2>
-    <div id="jsonTableA"></div>
+        <!-- Table B -->
+        <div class="table-container">
+            <div class="table-data">
+                <h2>Table B</h2>
+                <textarea id="inputDataB" placeholder="Paste values here..."></textarea>
+            </div>
+            <div class="table-options">
+                <div class="option-group">
+                    <label for="delimiterSelectB">Delimiter:</label>
+                    <select id="delimiterSelectB">
+                        <option value="\t">Tab</option>
+                        <option value=",">Comma (,)</option>
+                        <option value=";">Semicolon (;)</option>
+                        <option value=" ">Space</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <input type="checkbox" id="headerCheckboxB">
+                    <label for="headerCheckboxB">Data includes header</label>
+                </div>
+            </div>
+            <div id="jsonTableB">
+                
+            </div>
+        </div>
 
-    <h2>Text to Table B</h2>
-    <textarea id="inputDataB" placeholder="Paste values here..."></textarea><br>
-    Delimiter:
-    <select id="delimiterSelectB">
-        <option value="\t">Tab</option>
-        <option value=",">Comma (,)</option>
-        <option value=";">Semicolon (;)</option>
-        <option value=" ">Space</option>
-    </select><br>
-    <input type="checkbox" id="headerCheckboxB"> Data includes header<br>
-
-    <h2>JSON Table B</h2>
-    <div id="jsonTableB"></div>
+        <!-- Inner Join Table -->
+        <h2>Inner Join Table</h2>
+        <div class="option-group">
+            <label for="joinColumnA">Join Column A:</label>
+            <select id="joinColumnA">
+            </select>
+        </div>
+        <div class="option-group">
+            <label for="joinColumnB">Join Column B:</label>
+            <select id="joinColumnB">
+            </select>
+        </div>
+        <div class="option-group">
+            <label for="joinType">Join Type:</label>
+            <select id="joinType">
+                <option value="inner">Inner Join</option>
+                <option value="left">Left Join</option>
+                <option value="right">Right Join</option>
+            </select>
+        </div>
+        <input id="Convert" class="button" type="button" value="Join Tables" onclick="performJoin();">
+        <div id="joinTable">
+            
+        </div>
+    </div>
 
     <script>
-        function convertToJSON(inputData, delimiter, includeHeader) {
+        var tableAData = null;
+        var tableBData = null;
+
+        function convertToJSON(inputData, delimiter, includeHeader, tableIdentifier) {
             // Split input into rows
             var rows = inputData.trim().split('\n');
 
@@ -76,7 +205,7 @@
                     if (row[i] === '"' && (i === 0 || row[i - 1] !== '\\')) {
                         inQuotes = !inQuotes;
                     } else if (row[i] === delimiter && !inQuotes) {
-                        rowData.push(currentCell);
+                        rowData.push(currentCell.trim());
                         currentCell = '';
                     } else {
                         currentCell += row[i];
@@ -84,7 +213,7 @@
                 }
                 // Check if last character was delimiter
                 if (currentCell !== '' || row.slice(-1) !== delimiter) {
-                    rowData.push(currentCell);
+                    rowData.push(currentCell.trim());
                 }
                 table.push(rowData);
             });
@@ -96,7 +225,8 @@
             if (!includeHeader) {
                 var header = [];
                 for (var j = 0; j < longestRowLength; j++) {
-                    header.push("A" + (j + 1));
+                    header.push(tableIdentifier + (j + 1
+					));
                 }
                 table.unshift(header);
             }
@@ -105,7 +235,7 @@
             else {
                 var providedHeader = table.shift();
                 while (providedHeader.length < longestRowLength) {
-                    providedHeader.push("A" + (providedHeader.length + 1));
+                    providedHeader.push(tableIdentifier + (providedHeader.length + 1));
                 }
                 table.unshift(providedHeader);
             }
@@ -133,16 +263,16 @@
             jsonTableDiv.classList.add("scrollable-table");
         }
 
-        function setupConversion(textAreaId, delimiterSelectId, headerCheckboxId, targetElementId, convertFunction) {
-            document.getElementById(textAreaId).addEventListener("input", function() {
+        function setupConversion(textAreaId, delimiterSelectId, headerCheckboxId, convertFunction) {
+            document.getElementById(textAreaId).addEventListener("input", function () {
                 convertFunction();
             });
 
-            document.getElementById(delimiterSelectId).addEventListener("change", function() {
+            document.getElementById(delimiterSelectId).addEventListener("change", function () {
                 convertFunction();
             });
 
-            document.getElementById(headerCheckboxId).addEventListener("change", function() {
+            document.getElementById(headerCheckboxId).addEventListener("change", function () {
                 convertFunction();
             });
         }
@@ -155,8 +285,11 @@
             // Replace \t with tab character
             delimiter = delimiter.replace(/\\t/g, "\t");
 
-            var table = convertToJSON(inputData, delimiter, includeHeader);
-            displayJSONTable(table, "jsonTableA");
+            tableAData = convertToJSON(inputData, delimiter, includeHeader, "A");
+            displayJSONTable(tableAData, "jsonTableA");
+
+            // Populate join column options for Table A
+            populateJoinColumnOptions(tableAData, "joinColumnA");
         }
 
         function convertTableB() {
@@ -167,15 +300,87 @@
             // Replace \t with tab character
             delimiter = delimiter.replace(/\\t/g, "\t");
 
-            var table = convertToJSON(inputData, delimiter, includeHeader);
-            displayJSONTable(table, "jsonTableB");
+            tableBData = convertToJSON(inputData, delimiter, includeHeader, "B");
+            displayJSONTable(tableBData, "jsonTableB");
+
+            // Populate join column options for Table B
+            populateJoinColumnOptions(tableBData, "joinColumnB");
         }
 
+        function populateJoinColumnOptions(tableData, selectId) {
+            var select = document.getElementById(selectId);
+            select.innerHTML = ""; // Clear existing options
+
+            if (tableData && tableData[0]) {
+                tableData[0].forEach((column, index) => {
+                    var option = document.createElement("option");
+                    option.value = index;
+                    option.textContent = column;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function performJoin() {
+    if (tableAData && tableBData) {
+        var joinColumnA = document.getElementById("joinColumnA").value;
+        var joinColumnB = document.getElementById("joinColumnB").value;
+        var joinType = document.getElementById("joinType").value;
+
+        var joinedData = innerJoin(tableAData, joinColumnA, tableBData, joinColumnB, joinType);
+        displayJSONTable(joinedData, "joinTable");
+    }
+}
+
+        function innerJoin(tableA, columnA, tableB, columnB, joinType) {
+    // Create a map to store tableB rows indexed by the joining column value
+    const mapB = new Map();
+    tableB.slice(1).forEach(row => {
+        const key = row[columnB];
+        if (!mapB.has(key)) {
+            mapB.set(key, []);
+        }
+        mapB.get(key).push(row);
+    });
+
+    // Perform inner join
+    const result = [tableA[0].concat(tableB[0])]; // Combined header row
+    tableA.slice(1).forEach(rowA => {
+        const key = rowA[columnA];
+        if (mapB.has(key)) {
+            const rowsB = mapB.get(key);
+            rowsB.forEach(rowB => {
+                result.push(rowA.concat(rowB));
+            });
+        } else if (joinType === 'left') {
+            result.push(rowA.concat(new Array(tableB[0].length).fill('')));
+        }
+    });
+
+    if (joinType === 'right') {
+        tableB.slice(1).forEach(rowB => {
+            const key = rowB[columnB];
+            if (!mapB.has(key)) {
+                result.push(new Array(tableA[0].length).fill('').concat(rowB));
+            }
+        });
+    }
+
+    return result;
+}
+
+
         // Setup conversion for textarea A and table A
-        setupConversion("inputDataA", "delimiterSelectA", "headerCheckboxA", "jsonTableA", convertTableA);
+        setupConversion("inputDataA", "delimiterSelectA", "headerCheckboxA", convertTableA);
 
         // Setup conversion for textarea B and table B
-        setupConversion("inputDataB", "delimiterSelectB", "headerCheckboxB", "jsonTableB", convertTableB);
+        setupConversion("inputDataB", "delimiterSelectB", "headerCheckboxB", convertTableB);
+
+        // Perform initial conversion for table A and table B
+        convertTableA();
+        convertTableB();
     </script>
+
 </body>
+
 </html>
