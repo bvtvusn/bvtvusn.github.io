@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Values to JSON</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        textarea {
+            width: 100%;
+            height: 50px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        .scrollable-table {
+            max-height: 200px; /* Adjust the maximum height as needed */
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h2>Text to Table A</h2>
+    <textarea id="inputDataA" placeholder="Paste values here..."></textarea><br>
+    Delimiter:
+    <select id="delimiterSelectA">
+        <option value="\t">Tab</option>
+        <option value=",">Comma (,)</option>
+        <option value=";">Semicolon (;)</option>
+        <option value=" ">Space</option>
+    </select><br>
+    <input type="checkbox" id="headerCheckboxA"> Data includes header<br>
+
+    <h2>JSON Table A</h2>
+    <div id="jsonTableA"></div>
+
+    <h2>Text to Table B</h2>
+    <textarea id="inputDataB" placeholder="Paste values here..."></textarea><br>
+    Delimiter:
+    <select id="delimiterSelectB">
+        <option value="\t">Tab</option>
+        <option value=",">Comma (,)</option>
+        <option value=";">Semicolon (;)</option>
+        <option value=" ">Space</option>
+    </select><br>
+    <input type="checkbox" id="headerCheckboxB"> Data includes header<br>
+
+    <h2>JSON Table B</h2>
+    <div id="jsonTableB"></div>
+
+    <script>
+        function convertToJSON(inputData, delimiter, includeHeader) {
+            // Split input into rows
+            var rows = inputData.trim().split('\n');
+
+            // Parse rows into table
+            var table = [];
+            rows.forEach(row => {
+                if (row.trim() === '') return; // Ignore empty lines
+
+                var rowData = [];
+                var inQuotes = false;
+                var currentCell = '';
+                for (var i = 0; i < row.length; i++) {
+                    if (row[i] === '"' && (i === 0 || row[i - 1] !== '\\')) {
+                        inQuotes = !inQuotes;
+                    } else if (row[i] === delimiter && !inQuotes) {
+                        rowData.push(currentCell);
+                        currentCell = '';
+                    } else {
+                        currentCell += row[i];
+                    }
+                }
+                // Check if last character was delimiter
+                if (currentCell !== '' || row.slice(-1) !== delimiter) {
+                    rowData.push(currentCell);
+                }
+                table.push(rowData);
+            });
+
+            // Determine longest row (number of columns)
+            var longestRowLength = Math.max(...table.map(row => row.length));
+
+            // If header checkbox is not checked, add header with auto-generated column names
+            if (!includeHeader) {
+                var header = [];
+                for (var j = 0; j < longestRowLength; j++) {
+                    header.push("A" + (j + 1));
+                }
+                table.unshift(header);
+            }
+
+            // If header checkbox is checked, ensure the provided header is of the correct length
+            else {
+                var providedHeader = table.shift();
+                while (providedHeader.length < longestRowLength) {
+                    providedHeader.push("A" + (providedHeader.length + 1));
+                }
+                table.unshift(providedHeader);
+            }
+
+            return table;
+        }
+
+        function displayJSONTable(table, targetElementId) {
+            var jsonTableDiv = document.getElementById(targetElementId);
+            jsonTableDiv.innerHTML = '';
+            var tableElem = document.createElement("table");
+            jsonTableDiv.appendChild(tableElem);
+
+            table.forEach((row, rowIndex) => {
+                var tr = document.createElement("tr");
+                row.forEach((cell, cellIndex) => {
+                    var cellElem = document.createElement(rowIndex === 0 ? "th" : "td");
+                    cellElem.textContent = cell;
+                    tr.appendChild(cellElem);
+                });
+                tableElem.appendChild(tr);
+            });
+
+            // Add class for making the table vertically scrollable
+            jsonTableDiv.classList.add("scrollable-table");
+        }
+
+        function setupConversion(textAreaId, delimiterSelectId, headerCheckboxId, targetElementId, convertFunction) {
+            document.getElementById(textAreaId).addEventListener("input", function() {
+                convertFunction();
+            });
+
+            document.getElementById(delimiterSelectId).addEventListener("change", function() {
+                convertFunction();
+            });
+
+            document.getElementById(headerCheckboxId).addEventListener("change", function() {
+                convertFunction();
+            });
+        }
+
+        function convertTableA() {
+            var inputData = document.getElementById("inputDataA").value;
+            var delimiter = document.getElementById("delimiterSelectA").value;
+            var includeHeader = document.getElementById("headerCheckboxA").checked;
+
+            // Replace \t with tab character
+            delimiter = delimiter.replace(/\\t/g, "\t");
+
+            var table = convertToJSON(inputData, delimiter, includeHeader);
+            displayJSONTable(table, "jsonTableA");
+        }
+
+        function convertTableB() {
+            var inputData = document.getElementById("inputDataB").value;
+            var delimiter = document.getElementById("delimiterSelectB").value;
+            var includeHeader = document.getElementById("headerCheckboxB").checked;
+
+            // Replace \t with tab character
+            delimiter = delimiter.replace(/\\t/g, "\t");
+
+            var table = convertToJSON(inputData, delimiter, includeHeader);
+            displayJSONTable(table, "jsonTableB");
+        }
+
+        // Setup conversion for textarea A and table A
+        setupConversion("inputDataA", "delimiterSelectA", "headerCheckboxA", "jsonTableA", convertTableA);
+
+        // Setup conversion for textarea B and table B
+        setupConversion("inputDataB", "delimiterSelectB", "headerCheckboxB", "jsonTableB", convertTableB);
+    </script>
+</body>
+</html>
