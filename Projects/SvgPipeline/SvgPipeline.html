@@ -40,9 +40,9 @@ function drawBoxes(svg, boxes) {
 }
 
 function calculateControlPoints(startX, startY, endX, endY) {
-    const controlX1 = startX + 40,
+    const controlX1 =startX + 30 + Math.max(0, startX-endX)*2,
         controlY1 = startY,
-        controlX2 = endX - 40,
+        controlX2 = endX - 30 - Math.max(0, startX-endX)*2,
         controlY2 = endY;
     return { controlX1, controlY1, controlX2, controlY2 };
 }
