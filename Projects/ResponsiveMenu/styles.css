@@ -1,0 +1,122 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header styles */
+.header {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Footer styles */
+.footer {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Main content styles */
+.main {
+  display: flex;
+}
+
+/* Menu container styles */
+.menu-container {
+  flex: 1;
+  max-width: 200px;
+  overflow-x: auto;
+}
+
+/* Navigation path styles */
+.navigation-path {
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+/* Menu styles */
+.menu {
+  padding: 10px;
+  white-space: nowrap;
+}
+
+/* Menu item styles */
+.menu-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Add transition for hover effect */
+}
+
+.menu-item:hover {
+  background-color: #ddd; /* Add hover effect */
+}
+
+/* Sub-menu styles */
+.sub-menu {
+  padding-left: 20px;
+}
+
+/* Parent button styles */
+.parent-button {
+  padding: 10px;
+  cursor: pointer;
+  display: none;
+}
+
+/* Current level styles */
+.current-level {
+  font-weight: bold;
+}
+
+/* Menu toggle button styles */
+.menu-toggle {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  /* Adjustments for smaller screens */
+  .main {
+    flex-direction: column;
+  }
+
+  .menu-container {
+    order: 2;
+    max-width: none;
+    position: fixed;
+    top: 0;
+    left: -200px;
+    width: 200px;
+    height: 100%;
+    background-color: #fff;
+    z-index: 1;
+    transition: left 0.3s ease;
+  }
+
+  .menu {
+    display: block;
+  }
+
+  .menu-toggle {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #333; /* Added color for better visibility */
+  }
+}
+
+/* Close menu button styles */
+.close-menu-button {
+  display: block;
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #33F;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
