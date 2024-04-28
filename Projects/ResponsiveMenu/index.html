@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Navigation Menu</title>
+<link rel="stylesheet" href="styles.css"> <!-- Link to external CSS file -->
+
+</head>
+<body>
+
+<header class="header">
+  <h1>Header</h1>
+</header>
+
+<main class="main">
+  <div class="menu-toggle" onclick="toggleMenu()">
+    <i class="fas fa-bars"></i> Menu
+  </div>
+  <div class="menu-container">
+    <div class="navigation-path" id="navigationPath"></div>
+    <div class="menu" id="menu">
+      <button class="close-menu-button" onclick="toggleMenu()">Close Menu</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <h2>Main Content</h2>
+    <p>This is a sample main content area.</p>
+  </div>
+</main>
+
+<footer class="footer">
+  <p>Footer</p>
+</footer>
+
+<script src="script.js"></script> <!-- Link to external JavaScript file -->
+
+</body>
+</html>
