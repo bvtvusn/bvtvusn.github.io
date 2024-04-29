@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Navigation Menu</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Font Awesome CSS -->
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f2f2f2; /* Light gray background */
+}
+
+/* Header and footer styles */
+.header, .footer {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Main content styles */
+.main {
+  display: flex;
+}
+
+/* Menu container styles */
+.menu-container {
+  max-width: 200px;
+  overflow-x: auto;
+  width: 200px;
+  background-color: #fff; /* White background for menu container */
+  border-right: 1px solid #ccc; /* Add a light border */
+}
+
+.current-folder {
+  height: 39px;
+  background-color: #007bff; /* Blue color for folder name background */
+  display: flex;
+  padding-left: 10px;
+  align-items: center;
+  font-weight: bold; /* Make folder name bold */
+  color: #fff; /* White text color */
+}
+
+/* Menu styles */
+.menu {
+  padding: 10px;
+  white-space: nowrap;
+}
+
+/* Menu item styles */
+.menu-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0; /* Light gray background on hover */
+}
+
+/* Menu toggle button styles */
+.menu-toggle {
+  display: none;
+}
+
+/* Adjustments for smaller screens */
+@media screen and (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+
+  .menu-container {
+    position: fixed;
+    top: 0;
+    left: -200px;
+    width: 200px;
+    height: 100%;
+    background-color: #fff;
+    z-index: 1;
+    transition: left 0.3s ease;
+  }
+
+  .menu-toggle {
+    display: block;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    cursor: pointer;
+    color: #fff; /* Dark text color */
+  }
+}
+
+.close-menu-button {
+  display: block;
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff; /* Blue color for close button */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+  text-decoration: none;
+  color: #333;
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>Header</h1>
+</header>
+
+<main class="main">
+  <div class="menu-toggle" onclick="toggleMenu()">
+    &#9776; 
+  </div>
+  <div class="menu-container">
+    <a href="javascript:void(0)" class="closebtn" id="closeMenuBtn" onclick="toggleMenu()">&times;</a>
+    <div class="current-folder" id="currentFolder">Main menu</div>
+    <div class="menu" id="menu"></div>   
+  </div>
+
+  <div class="content">
+    <h2>Main Content</h2>
+    <p>This is a sample main content area.</p>
+  </div>
+</main>
+
+<footer class="footer">
+  <p>Footer</p>
+</footer>
+
+<script>
+const menuItems = {
+  "Home": {"link": "#"},
+  "About": {
+    "link": "#about",
+    "children": {
+      "Team": {"link": "#team"},
+      "Mission": {"link": "#mission"},
+      "Values": {
+        "link": "#values",
+        "children": {
+          "Integrity": {"link": "#integrity"},
+          "Excellence": {"link": "#excellence"}
+        }
+      }
+    }
+  },
+  "Services": {
+    "link": "#services",
+    "children": {
+      "Web Design": {"link": "#web-design"},
+      "Graphic Design": {"link": "#graphic-design"}
+    }
+  },
+  "Contact": {"link": "#contact"}
+};
+
+const menuElement = document.getElementById('menu');
+const currentFolderElement = document.getElementById('currentFolder');
+let currentFolder = [];
+
+function renderMenu() {
+    currentFolderElement.innerHTML = ''; // Clear previous content
+    
+	let foldername = "Main menu"
+	if (currentFolder.length > 0){
+		foldername = currentFolder[currentFolder.length-1];
+	}	
+	const pathItem = document.createElement('div');
+		pathItem.textContent = foldername;
+		currentFolderElement.appendChild(pathItem);
+	
+    let currentLevel = menuItems;
+    currentFolder.forEach(key => {
+        currentLevel = currentLevel[key].children;
+    });
+    menuElement.innerHTML = '';
+    renderParentButton();
+    for (let label in currentLevel) {
+        if (currentLevel.hasOwnProperty(label)) {
+            const item = currentLevel[label];
+            const menuItem = document.createElement('div');
+            menuItem.classList.add('menu-item');
+            menuItem.textContent = label;
+            menuItem.addEventListener('click', () => {
+                handleMenuItemClick(item, label);
+            });
+            menuElement.appendChild(menuItem);
+        }
+    }
+}
+
+function renderParentButton() {
+    let parentButton = document.querySelector('.parent-button');
+    if (!parentButton) {
+        parentButton = document.createElement('div');
+        parentButton.classList.add('parent-button');
+        parentButton.innerHTML = '<i class="fas fa-chevron-left"></i>'; // FontAwesome chevron-left icon
+        parentButton.addEventListener('click', navigateToParent);
+        menuElement.insertBefore(parentButton, menuElement.firstChild);
+    }
+    parentButton.style.display = currentFolder.length ? 'block' : 'none';
+}
+
+function handleMenuItemClick(item, label) {
+    if (item.children) {
+        currentFolder.push(label);
+        renderMenu();                    
+    } else {
+        window.location.href = item.link;
+    }
+}
+
+function navigateToParent() {
+    currentFolder.pop();
+    renderMenu();
+}
+function toggleMenu() {
+  const menuContainer = document.querySelector('.menu-container');
+  menuContainer.style.left = (menuContainer.style.left === '0px') ? '-200px' : '0px';
+}
+
+renderMenu();
+
+</script> 
+</body>
+</html>
