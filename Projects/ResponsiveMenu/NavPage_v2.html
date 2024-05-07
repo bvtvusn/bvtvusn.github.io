@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0060)https://bvtvusn.github.io/Projects/ResponsiveMenu/NavPage_v2 -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobile Navigation Menu</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Font Awesome CSS -->
+<link rel="stylesheet" href="./Mobile Navigation Menu_0507_files/all.min.css"> <!-- Font Awesome CSS -->
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -76,7 +76,7 @@ body {
   .menu-container {
     position: fixed;
     top: 0;
-    left: -200px;
+    left: -201px;
     width: 200px;
     height: 100%;
     background-color: #fff;
@@ -123,12 +123,12 @@ body {
 
 <main class="main">
   <div class="menu-toggle" onclick="toggleMenu()">
-    &#9776; 
+    ☰ 
   </div>
   <div class="menu-container">
-    <a href="javascript:void(0)" class="closebtn" id="closeMenuBtn" onclick="toggleMenu()">&times;</a>
-    <div class="current-folder" id="currentFolder">Main menu</div>
-    <div class="menu" id="menu"></div>   
+    <a href="javascript:void(0)" class="closebtn" id="closeMenuBtn" onclick="toggleMenu()">×</a>
+    <div class="current-folder" id="currentFolder"><div>Main menu</div></div>
+    <div class="menu" id="menu"><div class="parent-button" style="display: none;"><i class="fas fa-chevron-left"></i></div><div class="menu-item">Home</div><div class="menu-item">About</div><div class="menu-item">Services</div><div class="menu-item">Contact</div></div>   
   </div>
 
   <div class="content">
@@ -230,11 +230,12 @@ function navigateToParent() {
 }
 function toggleMenu() {
   const menuContainer = document.querySelector('.menu-container');
-  menuContainer.style.left = (menuContainer.style.left === '0px') ? '-200px' : '0px';
+  menuContainer.style.left = (menuContainer.style.left === '0px') ? '-201px' : '0px';
 }
 
 renderMenu();
 
 </script> 
-</body>
-</html>
+
+
+</body></html>
