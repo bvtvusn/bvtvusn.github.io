@@ -4,7 +4,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobile Navigation Menu</title>
-<link rel="stylesheet" href="./Mobile Navigation Menu_0507_files/all.min.css"> <!-- Font Awesome CSS -->
+
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -208,7 +208,7 @@ function renderParentButton() {
     if (!parentButton) {
         parentButton = document.createElement('div');
         parentButton.classList.add('parent-button');
-        parentButton.innerHTML = '<i class="fas fa-chevron-left"></i>'; // FontAwesome chevron-left icon
+        parentButton.innerHTML = ' &#x2190; Back'; // FontAwesome chevron-left icon
         parentButton.addEventListener('click', navigateToParent);
         menuElement.insertBefore(parentButton, menuElement.firstChild);
     }
