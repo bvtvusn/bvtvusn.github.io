@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIY SCADA System Demonstration</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #F2FAEF;
+            color: #223555;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #D4494C;
+            color: #F2FAEF;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #333; /* Changed color */
+            overflow-x: hidden;
+            padding-top: 60px;
+            transition: 0.3s;
+            z-index: 2000;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidenav.closed {
+            left: -250px;
+        }
+
+        .sidenav a {
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.2em;
+            color: #F2FAEF;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidenav a:hover {
+            background-color: #B2D8DB;
+            color: #223555;
+        }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            color: #F2FAEF;
+        }
+
+        .main {
+            margin-left: 0px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+            flex: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .main h2 {
+            color: #D4494C;
+            border-bottom: 3px solid #B2D8DB;
+            padding-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .main p {
+            font-size: 1.2em;
+            line-height: 1.8;
+        }
+
+        footer {
+            background-color: #555; /* Changed color */
+            color: #F2FAEF;
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        @media screen and (max-width: 600px) {            
+
+            .sidenav a {
+                float: left;
+            }            
+
+            .sidenav a {
+                padding: 15px;
+                text-align: center;
+                float: none;
+            }
+        }
+
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            /* width: 80%; */
+
+            max-height:350px;
+            max-width:700px;
+            height:auto;
+            width:auto;
+            }
+        .centered-thing {
+            position: absolute;
+            margin: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        iframe {
+   display: block;
+   margin: 0 auto;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+        }
+
+        table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span style="font-size:30px;cursor:pointer;color: #F2FAEF;position:absolute;left:20px;" onclick="toggleSidebar()">&#9776;</span>
+    <h1>Ignition SCADA System Demonstration</h1>
+</header>
+
+<div id="mySidenav" class="sidenav closed">
+    <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
+    <a href="#introduction">Introduction</a>
+    <a href="#project goal">Project goal</a>
+    <a href="#Selecting technology">Selecting technology</a>
+    <a href="#Creating the system">Creating the system</a>
+    <a href="#Thoughts">Thoughts</a>
+    <a href="#Conclusion">Conclusion</a>
+    <a href="#References">References</a>
+    
+</div>
+
+<div class="main">
+    <section id="introduction">
+        <h2>Introduction</h2>
+        
+        <iframe  width="560" height="315" src="https://www.youtube.com/embed/gzEbZ_cRa_w?si=CWHyn4oxMP8y6RjL" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+        <!-- <iframe  widths="800" height="500" 
+        src="https://www.youtube.com/embed/gzEbZ_cRa_w">
+        </iframe> -->
+        <!-- <img src="Resources/YT_Thumbnail.png" alt="Microcontroller and Smartphone"  class="center"> -->
+
+        <p>Working on &laquo;do it yourself&rdquo; projects (DIY) can be a fun way to learn new technology. When selecting what project to work on, you usually look for something fun and useful like a plant watering system or even a smart home system. Another choice that is equally important is what technology you use, because it can influence time consume, price and the quality of the final result. In this article, we will create a temperature control system using modern and cheap components. The system will include PID control of a heating element, visualization of realtime and historical values in a web browser and transfer of values to the cloud. The project is based on the &ldquo;Wemos d1 mini&rdquo; microcontroller and the Ignition SCADA system. These two tools work great together and will be configured to make up a web based control system.</p>
+    </section>
+
+    <section id="project goal">
+        <h2>Project goal</h2>
+        <p>This project aims to create a web based control system that controls temperature in an air heater tunnel. The requirements are listed below: 
+        </p> 
+        <ul>
+                <li>
+                    User interface must be intuitive and good looking.
+                </li>
+                <li>
+                    User interface must be web-based
+                </li>
+                <li>
+                    The input/output signals from the air heater are analog voltages. These must be connected to the control system.
+                </li>
+                <li>
+                    Temperature in the air heater must be controlled and must be stable.
+                </li>
+                <li>    
+                    Data must be sent to the cloud.
+                </li>
+            </ul>
+            <img src="Resources/IMG_3004.jpeg" alt="Microcontroller and Smartphone"  class="center">
+    </section>
+    
+    <section id="Selecting technology">
+        <h2>Selecting technology</h2>
+        <p>Ignition by inductive automation was selected to be used for creating the user interface for several reasons. Most importantly, it can easily create good looking webpages with live data. This is what Ignition is made for, so it is a perfect fit for our task. Ignition also has a Maker edition that lets hobbyists get a free license. This is also important since DIY projects usually have a low budget.</p>
+        <p>For the IO-device, the Wemos D1 mini microcontroller was selected due to three main reasons. It is cheap, easily programmable and has built in Wifi. This is actually one of the cheapest microcontrollers that has wifi built in. The downside to using it is that it operates on 3.3V and not 5V and it does not have analog output. The air heater device can only be controlled with 5V analog voltage, so this must be created using electronics (described further down). </p>
+        <p>To exchange information between Ignition and the microcontroller, some kind of protocol must be selected. Some options that is supported on both sides are serial, MQTT, Modbus TCP, REST API and UPC UA. Modbus TCP was selected because it is simple and fast. The downside is that it does not send encrypted data.</p>
+        <p>A cloud service had to be selected to receive logged data from the system. Thingspeak was picked because it has a free version, has a simple rest API and gives a nice visualization of the history of the values.</p>
+    </section>
+
+    <section id="Creating the system">
+        <h2>Creating the system</h2>
+        <p>To get the microcontroller functional, it had to be programmed and wired to the analog signals. Since the output from the air heater system (representing temperature) was a 0 &ndash; 5V signal, it had to be scaled down to 3.3v. This was done easily and can be seen in the picture below. The airheater also expected a 5v analog signal for controlling the heating element. This was more tricky because the microcontroller did not have analog output and the voltage also had to be increased. The solution was to let the microcontroller send out a PWM signal at 3.3V. this was then converted into a higher voltage by using a 9V battery and a transistor. The signal was then fed into a RC filter to smooth the PWM into an analog voltage.</p>
+        <img src="Resources/Electronics.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>The RC filter had to be adjusted to get the right time constant. Since the air heater process is a slow process we can use a long filter time constant without affecting the overall system. This results in a smoother voltage. Based on a test with an oscilloscope, the time constant was around 100ms, and the voltage looked very smooth.</p>
+        <img src="Resources/RC_filterStepResponse.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>The final circuit is shown in the picture below.</p>
+        <img src="Resources/PhysicalCircuit.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>The program in the microcontroller does the following tasks in each program cycle:
+            <ol>
+                <li>Try to reconnect to preconfigured Wifi connection if connection is not up.</li>
+                <li>Respond to incoming modbus requests. Can be read or write requests.</li>
+                <li>Process the PID controller. This is processed at a fixed interval, so it first checks if enough time has elapsed to do a new calculation. </li>
+                <li>Controller output is scaled to a voltage and sent to the heating element.</li>
+                <li>The temperature is received as an analog voltage and is filtered in a lowpass filter in the code. This temperature is available for the PID controller the next time it executes.</li>
+                <li>The temperature and the controller output is sent to thingspeak.</li>
+            </ol>
+        </p>
+        <img src="Resources/ArduinoMainLoop.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>For convenience, the microcontroller is also programmed with a simulator of the air heater that can be used instead of the real system. This makes it easier to test during development. The simulator was based on the differential equation of the system, shown below. </p>
+        <img src="Resources/DifferentialEquation.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>Ignition was installed on a computer that was available in the same network. Ignition comes with a modbus TCP communication module which was connected to the IP and port of the modbus TCP server on the microcontroller. This let Ignition read and write to float values on the microcontroller. </p>
+        
+        <table>
+            <tr>
+                <th>Microcontroller variable</th>
+                <th>Modbus Holding register</th>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Temperature (float)</td>
+                <td>HR0</td>
+                
+            </tr>
+            <tr>
+                <td>HR1</td>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Setpoint (float)</td>
+                <td>HR2</td>
+                
+            </tr>
+            <tr>
+                <td>HR3</td>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Control signal (float)</td>
+                <td>HR4</td>
+                
+            </tr>
+            <tr>
+                <td>HR5</td>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Controller P (float)</td>
+                <td>HR6</td>
+                
+            </tr>
+            <tr>
+                <td>HR7</td>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Controller I (float)</td>
+                <td>HR8</td>
+                
+            </tr>
+            <tr>
+                <td>HR9</td>
+                
+            </tr>
+            <tr>
+                <td rowspan="2">Controller D (float)</td>
+                <td>HR10</td>
+                
+            </tr>
+            <tr>
+                <td>HR11</td>
+                
+            </tr>
+        </table>
+        <p>The Perspective module in Ignition was then used to create webpages to display the data. Here, the flex box model was used to create pages that automatically adapted to different screen sizes. For very narrow screens, content was placed vertically instead of horizontally to make a responsive design. Perspective also comes with a powerchart component that displays line charts with historical values. This was used for displaying the temperature setpoint, current temperature and controller output.</p>
+        <img src="Resources/IgnitionUserInterfce_02.png" alt="Microcontroller and Smartphone"  class="center">
+        <p>A popup in the user interface was made for interacting with the controller. This was used to tune the PID controller. </p>
+        <img src="Resources/IgnitionUserInterfce_01.png" alt="Microcontroller and Smartphone"  class="center">
+    </section>
+
+    <section id="Thoughts">
+        <h2>Thoughts</h2>
+        <p>Ignition is a useful for creating a control system showing live values. However, it must run on a server which must be running at all times. To avoid using a server, one could run the web interface directly on the microcontroller. This would require fewer components, but the programming would be more manual, and the end result would probably not be as good. It would also be interesting to try running Ignition on cheaper hardware like a raspberry pi.</p>
+        <p>In the system, the PID controller is placed in the microcontroller and not ignition. This is beneficial, because it allows the control loop to continue working if the ignition server is restarted or the wifi network connection is lost. </p>
+        <p>As long as the modbus TCP communication is sent over a closed and encrypted network, there should be no security concerns. </p>
+    </section>
+    
+    <section id="Conclusion">
+        <h2>Conclusion</h2>
+        <p>The final system ended up fulfilling all the requirements, and was considered a success. Since the system can be used from a smartphone, it can be used for a wide range of applications. All the components were able to exchange information easily, and I recommend others to test these tools on their own. With minor modifications, the same approach can be used for controlling other systems, like for example the lighting in your home. </p>
+        <img src="Resources/IMG_3005.jpeg" alt="Microcontroller and Smartphone"  class="center">
+    </section>
+
+    <section id="References">
+
+        <h2>References</h2>
+        
+        <ul>
+            <li>
+                [1] Inductiveautomation.com (2024). "Ignition, The Platform for Unlimited Digital Transformation" <em>Webpage</em>
+                <a href="https://inductiveautomation.com/ignition/">https://inductiveautomation.com/ignition/</a>
+            </li>
+            <li>
+                [2] Haugen. F.H, <em>Reguleringsteknikk</em>, 2. utg. Norway, 2014.
+                
+            </li>
+            
+        </ul>
+    </section>
+</div>
+
+<footer>
+    <p>&copy; 2024 DIY SCADA Project</p>
+</footer>
+
+<script>
+function toggleSidebar() {
+    document.getElementById('mySidenav').classList.toggle('closed');
+}
+</script>
+
+</body>
+</html>
