@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lowpass filter demo with Chart.js</title>
+  <!-- Link to Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>Lowpass filter demo with Chart.js</h2>
+  <div style="width: 80%; margin: auto;">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div style="margin-top: 20px; text-align: center;">
+    <label for="valueSlider">Input value:</label>
+    <input type="range" id="valueSlider" name="valueSlider" min="0" max="100" value="50" onchange="updateSliderValue(this.value)">
+    <span id="sliderValue">50</span>
+  </div>
+
+  <div style="margin-top: 10px; text-align: center;">
+    <label for="filterConstant">Filter Time Constant:</label>
+    <input type="number" id="filterConstant" name="filterConstant" step="0.1" min="0.1" max="10" value="1.0" onchange="updateFilterConstant(this.value)">
+  </div>
+
+  <script>
+    // Define the DataLogger class
+    class DataLogger {
+      constructor(maxLength) {
+        this.queue = []; // Array to store data points
+        this.maxLength = maxLength; // Maximum length of the queue
+        this.startTime = null; // Start time for calculating elapsed time
+        this.updateInterval = 100; // Throttle interval in milliseconds
+        this.lastUpdateTime = Date.now(); // Timestamp of last update
+      }
+
+      // Function to insert a new data point
+      insert(value, timestamp) {
+        if (this.queue.length === 0) {
+          this.startTime = timestamp; // Set the start time on first insertion
+        }
+
+        // Calculate elapsed time in seconds since the first sample was logged
+        const elapsedTime = (timestamp - this.startTime) / 1000;
+
+        // Create a data point object
+        const dataPoint = {
+          elapsedTime: elapsedTime.toFixed(2), // Convert to 2 decimal places for seconds
+          value: value
+        };
+
+        // Append the data point to the queue
+        this.queue.push(dataPoint);
+
+        // Maintain the queue length
+        if (this.queue.length > this.maxLength) {
+          this.queue.shift(); // Remove the oldest element if queue exceeds maxLength
+        }
+
+        // Throttle chart update
+        const now = Date.now();
+        if (now - this.lastUpdateTime >= this.updateInterval) {
+          this.lastUpdateTime = now;
+          updateChart();
+        }
+      }
+
+      // Function to retrieve the complete queue
+      getQueue() {
+        return this.queue.map(entry => ({
+          elapsedTime: entry.elapsedTime,
+          value: entry.value
+        }));
+      }
+    }
+
+    // Initialize two instances of DataLogger with increased maxLength
+    const logger1 = new DataLogger(400); // Maximum length of the queue is 400
+    const logger2 = new DataLogger(400); // Maximum length of the queue is 400
+
+    // Initialize Chart.js chart
+    const ctx = document.getElementById('chart').getContext('2d');
+    let chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Logger 1',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0, // Disable point markers
+          pointHoverRadius: 0,
+          pointHitRadius: 0,
+          pointBorderWidth: 0
+        },
+        {
+          label: 'Logger 2',
+          data: [],
+          borderColor: 'red',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0, // Disable point markers
+          pointHoverRadius: 0,
+          pointHitRadius: 0,
+          pointBorderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 0 // Disable all animations
+        },
+        scales: {
+          xAxes: [{
+            type: 'time',
+            time: {
+              unit: 'second',
+              tooltipFormat: 'll HH:mm:ss'
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Time'
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Value'
+            }
+          }]
+        }
+      }
+    });
+
+    // Function to update Chart.js chart with data from both loggers
+    function updateChart() {
+      const queue1 = logger1.getQueue();
+      const queue2 = logger2.getQueue();
+      
+      const data = {
+        labels: queue1.map(entry => entry.elapsedTime),
+        datasets: [{
+          label: 'Logger 1',
+          data: queue1.map(entry => entry.value),
+          borderColor: 'blue',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0, // Disable point markers
+          pointHoverRadius: 0,
+          pointHitRadius: 0,
+          pointBorderWidth: 0
+        },
+        {
+          label: 'Logger 2',
+          data: queue2.map(entry => entry.value),
+          borderColor: 'red',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0, // Disable point markers
+          pointHoverRadius: 0,
+          pointHitRadius: 0,
+          pointBorderWidth: 0
+        }]
+      };
+
+      // Update chart data
+      chart.data = data;
+      chart.update();
+    }
+
+    // Update slider value display
+    function updateSliderValue(value) {
+      document.getElementById('sliderValue').textContent = value;
+    }
+
+    // Function to update filter time constant and recalculate filter effect
+    function updateFilterConstant(value) {
+      filterTimeConstant = parseFloat(value); // Update global filter time constant
+      recalculateFilterEffect(); // Recalculate filter effect
+    }
+
+    // Global filter variables
+    let filterTimeConstant = 1.0;
+    let filtTimestep = 0.01;
+    let filterEffect = filtTimestep / (filtTimestep + filterTimeConstant); // Initial filter effect
+
+    // Function to recalculate filter effect
+    function recalculateFilterEffect() {
+      filterEffect = filtTimestep / (filtTimestep + filterTimeConstant);
+	  console.log(filterEffect);
+    }
+
+    // Simulate continuous logging for logger 1 (insert data points every 10ms)
+    let filterValue = 0;
+    let timestamp1 = Date.now();
+
+    setInterval(() => {
+      const sliderValue = parseFloat(document.getElementById('valueSlider').value);
+      filterValue = filterValue * (1 - filterEffect) + sliderValue * filterEffect;
+
+      logger1.insert(sliderValue, timestamp1); // Insert slider value into logger 1
+      logger2.insert(filterValue, timestamp1); // Insert filtered value into logger 2
+      timestamp1 += 10; // Increment timestamp for next insertion (every 10ms)
+    }, 10); // Insert data points every 10ms for logger 1
+
+  </script>
+</body>
+</html>
